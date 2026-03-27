@@ -1,0 +1,32 @@
+Run X1 (%) X2 (min) X3 		BL (cm2/gr)  D80 (µm)
+			     		Experimental Experimental 
+1   30 	40 	  Level A 		2115   35 
+2   25 	35      Level C   	1589   47 
+3   40 	40 	  Level B 		2488   30 
+4   30 	40 	  Level B 		2309   32 
+5   35 	35 	  Level C 		1737   43 
+6   20 	40 	  Level C 		1753   42 
+7   20 	40 	  Level A 		1681   44 
+8   30 	40	  Level A 		1989   37 
+9   25 	45 	  Level A 		1846   39 
+10  30 	50 	  Level C 		2428   31 
+11  40 	40 	  Level A 		2003   37 
+12  40 	40 	  Level C 		2168   34 
+13  35 	35 	  Level A 		2050   36 
+14  35 	45 	  Level C 		2265   33 
+15  20 	40 	  Level B 		1337   56 
+16  30 	30 	  Level B 		1913   39 
+17  25 	45 	  Level B 		2085   38 
+18  25 	35 	  Level B 		1655   45 
+19  30 	30 	  Level A 		1900   39 
+20  30 	40 	  Level B 		2233   33 
+21  30 	40	  Level C 		1947   38 
+22  30 	40 	  Level C 		1929   39 
+23  30 	50 	  Level A 		2208   34 
+24  30 	50 	  Level B 		2235   34 
+25  35 	45 	  Level A 		2164   34 
+26  25 	35 	  Level A 		1878   40 
+27  35 	35 	  Level B 		2288   32 
+28  35 	45 	  Level B 		2613   29 
+29  30 	30 	  Level C 		1758   44 
+30  25 	45 	  Level C 		2062   36 

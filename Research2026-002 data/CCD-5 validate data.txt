@@ -1,0 +1,7 @@
+Run Independent Variable^a Chlorogenic Acid Extraction Yield (mg/g)
+        X1  X2  X3  X4      Experimental	RSM		 ANN
+					Data^b  	Deviation	 Deviation
+1 	   60  65 30  120 	39.65 ± 0.97  0.37 	 0.33
+2  	   50  75 20  135 	34.45 ± 2.17  1.51 	 1.16
+3 	   60  75 30  135 	37.70 ± 3.13  2.07 	 1.01
+4 	   50  65 20  120 	33.70 ± 2.55  0.62 	 0.12

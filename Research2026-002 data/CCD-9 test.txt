@@ -1,0 +1,3 @@
+Runs Code A B RS Predicted PGI Predicted GL Predicted RS PGI GL
+1 158 20 19.61 56.98 52.64 20.1 54.83 50.47
+2 155 18.5 20.65 54.06 49.11 21.04 52.9 48.52
