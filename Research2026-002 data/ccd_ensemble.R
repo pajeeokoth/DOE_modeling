@@ -13,7 +13,7 @@ library(DiagrammeR)
 # 2. Function to fit DL and gridsearch (run_DOE_ANN_full())
 # 3. Function to save the results (save_model_metrics())
 
-source('./Research2026-002 data/utils.R') # save all results
+source('./Research2026-002 data/utils.R')
 
 # LOAD the data sets
 
@@ -284,7 +284,7 @@ results <- doe_meta_model(
   predictors = predictors,
   rsm_formulas = rsm_formulas,
   design_type = "CCD",
-  excel_file="DOE_Metrics.xlsx"
+  excel_file="Metrics.xlsx"
 )
 
 ####################################################################
@@ -540,6 +540,116 @@ results <- doe_meta_model(
 )
 
 ####################################################################
+# CCD12
+####################################################################
+ccd12 <- read.csv('./Research2026-002 data/CCD-12 data.csv')
+
+#--------------------
+# Validate
+#---------------------
+train_ccd12 <- ccd12[1:20, , drop = FALSE]
+test_ccd12 <- ccd12[21:22, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for CCD12
+train_data <- train_ccd12
+test_data <- test_ccd12
+
+responses <- c('COD_removal', 'Biogas')
+predictors <- c("HRT","Vup","Influent_COD")
+
+rsm_formulas <- list(
+  COD_removal = COD_removal ~ FO(HRT, Vup, Influent_COD) + I(HRT^2) + HRT:Vup + HRT:Influent_COD,
+  Biogas = Biogas ~ FO(HRT, Vup, Influent_COD) + I(HRT^2) + I(Vup^2) + I(Influent_COD^2) + HRT:Vup + Vup:Influent_COD + I(HRT^2):Vup + HRT:I(Vup^2)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "CCD",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# CCD13
+####################################################################
+ccd13 <- read.csv('./Research2026-002 data/CCD-13 data.csv')
+
+#------------------
+# Validate
+#------------------
+train_ccd13 <- ccd13[1:20, , drop = FALSE]
+test_ccd13 <- ccd13[21:22, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for CCD13
+train_data <- train_ccd13
+test_data <- test_ccd13
+
+responses <- c('NTU', 'SVI')
+predictors <- c("x1","x2","x3")
+
+rsm_formulas <- list(
+  NTU = NTU ~ SO(x1, x2, x3),
+  SVI = SVI ~ SO(x1, x2, x3)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "CCD",
+  excel_file = "Metrics.xlsx"
+)
+
+####################################################################
+# CCD14
+####################################################################
+ccd14 <- read.csv('./Research2026-002 data/CCD-14 data.txt'
+                  , header = FALSE
+                  , skip = 1
+                  , sep = ""
+                  , fill = TRUE
+                  , stringsAsFactors = FALSE
+                  , fileEncoding = "UTF-8")
+
+# Define the column names
+colnames(ccd14) <- c("Run","A","B",'C',"D",'therm',"pres")
+
+#------------------
+# Validate
+train_ccd14 <- ccd14[1:30, , drop = FALSE]
+test_ccd14 <- ccd14[31:33, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for CCD14
+train_data <- train_ccd14
+test_data <- test_ccd14
+
+responses <- c('therm', 'pres')
+predictors <- c("A","B",'C',"D")
+
+rsm_formulas <- list(
+  therm = therm ~ FO(A, B, C, D) + I(A^2) + A:B,
+  pres = pres ~ FO(A, B, C, D) + C:D
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "CCD",
+  excel_file = "Metrics.xlsx"
+)
+
+####################################################################
 # CCD15
 ####################################################################
 ccd15 <- read.csv('./Research2026-002 data/CCD-15 data.txt'
@@ -717,6 +827,40 @@ predictors <- c("A","B",'C',"D",'E')
 
 rsm_formulas <- list(
   Kerf = Kerf ~ FO(A,B,C,D,E) + TWI(A,B,C,D,E)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "CCD",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# CCD22
+####################################################################
+ccd22 <- read.table('./Research2026-002 data/CCD-22 data.txt', header = TRUE)
+
+#------------------
+# Validate
+#------------------
+train_ccd22 <- ccd22[1:22, , drop = FALSE]
+test_ccd22 <- ccd22[23:24, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for CCD22
+train_data <- train_ccd22
+test_data <- test_ccd22
+
+responses <- c('HRY', 'BR')
+predictors <- c("steam","dryer","temp")
+
+rsm_formulas <- list(
+  HRY = HRY ~ FO(steam,dryer,temp) + TWI(steam,dryer) + TWI(dryer,temp) + I(steam^2),
+  BR = BR ~ FO(steam,dryer,temp) + TWI(steam,dryer) + TWI(dryer,temp) + I(steam^2)
 )
 
 results <- doe_meta_model(

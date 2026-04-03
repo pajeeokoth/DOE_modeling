@@ -257,12 +257,17 @@ gp_master_smallDOE <- function(data,
   #-----------------
   X <- as.matrix(data[, factors])
   y <- data[[response]]
+
+  # Remove rows with NA in predictors or response
+  complete <- complete.cases(X, y)
+  if (sum(!complete) > 0) {
+    warning(sprintf("gp_master_smallDOE(): dropping %d rows with NA in predictors/response.",
+                    sum(!complete)))
+    X <- X[complete, , drop = FALSE]
+    y <- y[complete]
+  }
   
-  #------------------------
-  # light jitter for duplicates
-  #------------------------
   n <- nrow(X); d <- ncol(X)
-  X <- X + matrix(rnorm(n * d, 0, 1e-6), n, d)
   
   #------------------------
   # Normalize once
@@ -297,19 +302,33 @@ gp_master_smallDOE <- function(data,
   }
 
   fit_one_kernel <- function(kernel_name) {
-    model <- tryCatch({
-      suppressMessages(suppressWarnings(
-        mleHetGP(
-          X = X,
-          Z = y,
-          covtype = kernel_name,
-          lower = rep(lower, ncol(X)),
-          upper = rep(upper, ncol(X))
-        )
-      ))
-    }, error = function(e) e)
+    # First attempt: no jitter — let hetGP group exact duplicates natively
+    # (hetGP is designed for replicated observations).
+    # Retries: progressively larger jitter only if Cholesky fails.
+    jitter_attempts <- c(0, 1e-6, 1e-4, 1e-3, 1e-2)
+    model <- NULL
+    last_err <- NULL
 
-    if (inherits(model, "error")) {
+    for (jit in jitter_attempts) {
+      X_try <- if (jit > 0) X + matrix(rnorm(n * d, 0, jit), n, d) else X
+      model <- tryCatch({
+        suppressMessages(suppressWarnings(
+          mleHetGP(
+            X = X_try,
+            Z = y,
+            covtype = kernel_name,
+            lower = rep(lower, ncol(X)),
+            upper = rep(upper, ncol(X))
+          )
+        ))
+      }, error = function(e) e)
+
+      if (!inherits(model, "error")) break
+      last_err <- model
+      model <- NULL
+    }
+
+    if (is.null(model) || inherits(model, "error")) {
       return(list(
         model = NULL,
         kernel_function = kernel_name,
@@ -317,20 +336,39 @@ gp_master_smallDOE <- function(data,
         LOOCV_MAPE = NA_real_,
         test_metrics = NULL,
         fit_success = FALSE,
-        message = conditionMessage(model)
+        message = if (!is.null(last_err)) conditionMessage(last_err)
+                  else "All jitter attempts failed"
       ))
     }
 
-    loo <- tryCatch({
-      getFromNamespace("leaveOneOut.mleHetGP", "hetGP")(model)
-    }, error = function(e) {
-      warning(sprintf("LOOCV failed for kernel '%s': %s", kernel_name, conditionMessage(e)))
-      NULL
-    })
+    # Try multiple access paths for leaveOneOut (export status varies by hetGP version)
+    loo <- NULL
+    for (.loo_accessor in list(
+      function(m) hetGP::leaveOneOut(m),                                     # exported generic
+      function(m) getFromNamespace("leaveOneOut", "hetGP")(m),               # unexported generic
+      function(m) getFromNamespace("leaveOneOut.mleHetGP", "hetGP")(m),      # direct S3 method
+      function(m) {                                                          # manual LOO
+        n <- length(m$Z0)
+        Ki <- chol2inv(chol(m$Ki))
+        alpha <- Ki %*% (m$Z0 - m$beta0)
+        loo_mean <- m$Z0 - alpha / diag(Ki)
+        list(mean = as.numeric(loo_mean))
+      }
+    )) {
+      loo <- tryCatch(.loo_accessor(model), error = function(e) NULL)
+      if (!is.null(loo) && !is.null(loo$mean)) break
+      loo <- NULL
+    }
+    if (is.null(loo))
+      warning(sprintf("LOOCV failed for kernel '%s': no working accessor found", kernel_name))
 
     loo_preds <- if (!is.null(loo)) loo$mean else rep(NA_real_, length(y))
-    loo_mase <- safe_mase(y, loo_preds, y)
-    loo_mape <- safe_mape(y, loo_preds)
+    # hetGP LOO returns predictions for unique design points (Z0),
+    # not all observations — match actual values to the same length.
+    loo_actual <- if (!is.null(loo) && !is.null(model$Z0) &&
+                      length(model$Z0) == length(loo_preds)) model$Z0 else y
+    loo_mase <- safe_mase(loo_actual, loo_preds, y)
+    loo_mape <- safe_mape(loo_actual, loo_preds)
 
     test_metrics <- NULL
     if (!is.null(test_data)) {
@@ -732,7 +770,8 @@ run_DOE_ANN_full <- function(data,
                              graph_title         = NULL,
                              max_runtime_secs    = 120,
                              nfolds              = 5,
-                             max_models_per_arch = 10) {
+                             max_models_per_arch = 10,
+                             standardize_response = TRUE) {
 
   if (!requireNamespace("h2o", quietly = TRUE)) stop("Install 'h2o' first.")
   can_plot <- requireNamespace("DiagrammeR", quietly = TRUE)
@@ -747,7 +786,21 @@ run_DOE_ANN_full <- function(data,
   try({ h2o::h2o.getConnection(); h2o_running <- TRUE }, silent = TRUE)
   if (!h2o_running) h2o::h2o.init()
 
-  hf <- h2o::as.h2o(data)
+  # ---- Standardize the response variable ----
+  # Neural networks learn far better when target values are centered and scaled.
+  # We train on z-scored y, then inverse-transform predictions before returning.
+  resp_mean <- 0
+  resp_sd   <- 1
+  train_df  <- data
+  if (standardize_response) {
+    resp_mean <- mean(data[[y]], na.rm = TRUE)
+    resp_sd   <- sd(data[[y]], na.rm = TRUE)
+    if (!is.finite(resp_sd) || resp_sd == 0) resp_sd <- 1
+    train_df <- data
+    train_df[[y]] <- (data[[y]] - resp_mean) / resp_sd
+  }
+
+  hf <- h2o::as.h2o(train_df)
 
   # Guard: H2O's FoldAssignment.fromInternalFold throws java.lang.AssertionError
   # when there are fewer than 2 rows per fold. Require nrow >= 2 * nfolds.
@@ -835,8 +888,9 @@ run_DOE_ANN_full <- function(data,
           hidden              = list(hid),
           activation          = c("Rectifier", "Tanh"),
           input_dropout_ratio = c(0),
-          l1 = seq(0, 1e-4, length.out = 5),
-          l2 = seq(0, 1e-4, length.out = 5)
+          l1 = seq(0, 1e-3, length.out = 5),
+          l2 = seq(0, 1e-3, length.out = 5),
+          epochs = c(50, 100, 200, 500)
         )
       ),
       list(
@@ -846,8 +900,9 @@ run_DOE_ANN_full <- function(data,
           activation            = c("RectifierWithDropout", "TanhWithDropout"),
           input_dropout_ratio   = seq(0, 0.3, length.out = 4),
           hidden_dropout_ratios = dropout_candidates,
-          l1 = seq(0, 1e-4, length.out = 5),
-          l2 = seq(0, 1e-4, length.out = 5)
+          l1 = seq(0, 1e-3, length.out = 5),
+          l2 = seq(0, 1e-3, length.out = 5),
+          epochs = c(50, 100, 200, 500)
         )
       )
     )
@@ -867,7 +922,18 @@ run_DOE_ANN_full <- function(data,
           nfolds          = safe_nfolds,
           fold_assignment = if (safe_nfolds > 0L) "Modulo" else "AUTO",
           hyper_params    = search_space$hyper_params,
-          search_criteria = base_search_criteria
+          search_criteria = base_search_criteria,
+          # Model-level early stopping: stop individual models when
+          # they plateau, preventing overfitting on small DOE data.
+          stopping_rounds    = 5,
+          stopping_metric    = "RMSE",
+          stopping_tolerance = 1e-4,
+          # Score frequently for reliable early stopping signal
+          score_each_iteration = FALSE,
+          score_interval       = 0,
+          overwrite_with_best_model = TRUE,
+          reproducible       = TRUE,
+          seed               = seed
         )
       }, error = function(e) {
         warning(sprintf("Grid (%s) for hidden=%s failed: %s",
@@ -925,7 +991,12 @@ run_DOE_ANN_full <- function(data,
   preds   <- if ("predict" %in% names(pred_df)) pred_df$predict
              else pred_df[[which(vapply(pred_df, is.numeric, logical(1)))[1]]]
 
-  actual <- data[[y]]
+  # Inverse-transform predictions back to original scale
+  if (standardize_response) {
+    preds <- preds * resp_sd + resp_mean
+  }
+
+  actual <- data[[y]]  # always compare to original-scale actuals
   if (!is.numeric(actual))
     actual <- suppressWarnings(as.numeric(as.character(actual)))
 
@@ -1009,7 +1080,10 @@ run_DOE_ANN_full <- function(data,
     topology        = topology,
     hyperparams     = hp,
     hyperparams_flat = hp_flat,
-    all_model_perfs  = model_perfs
+    all_model_perfs  = model_perfs,
+    resp_mean        = resp_mean,
+    resp_sd          = resp_sd,
+    standardize_response = standardize_response
   ))
 }
 
@@ -1048,24 +1122,34 @@ save_model_metrics <- function(file_path,
   df <- cbind(core_df, hp_df)
   
   # Write or append to Excel
-  if (file.exists(file_path)) {
-    wb <- loadWorkbook(file_path)
-    
-    if (!(sheet_name %in% names(wb))) {
-      addWorksheet(wb, sheet_name)
-      writeData(wb, sheet = sheet_name, x = df)
-    } else {
-      existing <- readWorkbook(file_path, sheet = sheet_name)
-      start_row <- nrow(existing) + 2
-      writeData(wb, sheet = sheet_name, x = df, startRow = start_row)
-    }
-    
+  # NOTE: openxlsx::loadWorkbook() can fail with 'object sheetrId not found'
+  # on workbooks it created itself.  Avoid loadWorkbook entirely: build a fresh
+  # workbook each time, re-reading existing sheets via read.xlsx().
+  existing_sheets <- if (file.exists(file_path)) {
+    tryCatch(openxlsx::getSheetNames(file_path), error = function(e) character(0))
+  } else character(0)
+
+  wb <- createWorkbook()
+
+  # Copy every existing sheet into the new workbook
+  for (s in existing_sheets) {
+    old_data <- tryCatch(openxlsx::read.xlsx(file_path, sheet = s), error = function(e) NULL)
+    addWorksheet(wb, s)
+    if (!is.null(old_data) && nrow(old_data) > 0)
+      writeData(wb, sheet = s, x = old_data)
+  }
+
+  if (sheet_name %in% existing_sheets) {
+    existing <- tryCatch(openxlsx::read.xlsx(file_path, sheet = sheet_name),
+                         error = function(e) NULL)
+    start_row <- if (!is.null(existing)) nrow(existing) + 2 else 1
+    writeData(wb, sheet = sheet_name, x = df, startRow = start_row,
+              colNames = (start_row == 1))
   } else {
-    wb <- createWorkbook()
     addWorksheet(wb, sheet_name)
     writeData(wb, sheet = sheet_name, x = df)
   }
-  
+
   save_workbook_safe(wb, file_path, overwrite = TRUE)
 }
 
@@ -1344,9 +1428,18 @@ doe_meta_model <- function(train_data,
       else NULL,
       n_test, fallback
     )
+    # Inverse-transform ANN predictions if response was standardized during training
+    if (!is.null(ann_result) && isTRUE(ann_result$standardize_response)) {
+      ann_pred <- ann_pred * ann_result$resp_sd + ann_result$resp_mean
+    }
     ann_mase       <- calc_mase(y_test, ann_pred, y_train)
     ann_mape       <- calc_mape(y_test, ann_pred)
     ann_topology   <- if (!is.null(ann_result)) ann_result$topology else "NA"
+
+    # Free all H2O objects (models, grids, frames) now that ANN predictions
+    # have been extracted into plain R vectors. Prevents JVM heap exhaustion
+    # across successive responses / doe_meta_model() calls.
+    tryCatch(h2o::h2o.removeAll(), error = function(e) NULL)
     ann_epochs     <- if (!is.null(ann_result)) fmt_integer_scalar(ann_result$hyperparams_flat$epochs) else NA_integer_
     ann_activation <- if (!is.null(ann_result)) fmt_scalar(ann_result$hyperparams_flat$activation) else NA_character_
     gp_kernel      <- if (!is.null(gp_fit$kernel_function)) fmt_scalar(gp_fit$kernel_function) else NA_character_
@@ -1469,6 +1562,16 @@ doe_meta_model <- function(train_data,
   sheet  <- "Model Metrics"
   gp_sheet <- "GP Kernel Search"
 
+  # Safely combine old and new data.frames even when columns differ
+  safe_rbind <- function(old_df, new_df) {
+    if (is.null(old_df) || nrow(old_df) == 0) return(new_df)
+    if (is.null(new_df) || nrow(new_df) == 0) return(old_df)
+    all_cols <- union(names(old_df), names(new_df))
+    for (col in setdiff(all_cols, names(old_df))) old_df[[col]] <- NA
+    for (col in setdiff(all_cols, names(new_df))) new_df[[col]] <- NA
+    rbind(old_df[, all_cols, drop = FALSE], new_df[, all_cols, drop = FALSE])
+  }
+
   sort_gp_kernel_search <- function(df) {
     if (is.null(df) || nrow(df) == 0) return(df)
 
@@ -1491,19 +1594,30 @@ doe_meta_model <- function(train_data,
     ), , drop = FALSE]
   }
 
-  if (file.exists(excel_file)) {
-    wb <- openxlsx::loadWorkbook(excel_file)
-    if (sheet %in% names(wb)) {
-      existing  <- openxlsx::read.xlsx(excel_file, sheet = sheet)
-      start_row <- nrow(existing) + 2
-      openxlsx::writeData(wb, sheet = sheet, x = out_df,
-                          startRow = start_row, colNames = (start_row == 1))
-    } else {
-      openxlsx::addWorksheet(wb, sheet)
-      openxlsx::writeData(wb, sheet = sheet, x = out_df)
-    }
+  # Build a fresh workbook each time to avoid the openxlsx loadWorkbook()
+  # 'sheetrId not found' bug.  Preserve all existing sheets via read.xlsx().
+  existing_sheets <- if (file.exists(excel_file)) {
+    tryCatch(openxlsx::getSheetNames(excel_file), error = function(e) character(0))
+  } else character(0)
+
+  wb <- openxlsx::createWorkbook()
+
+  for (s in existing_sheets) {
+    old_data <- tryCatch(openxlsx::read.xlsx(excel_file, sheet = s), error = function(e) NULL)
+    openxlsx::addWorksheet(wb, s)
+    if (!is.null(old_data) && nrow(old_data) > 0)
+      openxlsx::writeData(wb, sheet = s, x = old_data)
+  }
+
+  if (sheet %in% existing_sheets) {
+    existing  <- tryCatch(openxlsx::read.xlsx(excel_file, sheet = sheet),
+                          error = function(e) NULL)
+    combined  <- safe_rbind(existing, out_df)
+    # Rewrite the entire sheet with combined data (handles column changes safely)
+    openxlsx::removeWorksheet(wb, sheet)
+    openxlsx::addWorksheet(wb, sheet)
+    openxlsx::writeData(wb, sheet = sheet, x = combined)
   } else {
-    wb <- openxlsx::createWorkbook()
     openxlsx::addWorksheet(wb, sheet)
     openxlsx::writeData(wb, sheet = sheet, x = out_df)
   }
@@ -1516,9 +1630,13 @@ doe_meta_model <- function(train_data,
         openxlsx::read.xlsx(excel_file, sheet = gp_sheet),
         error = function(e) NULL
       )
-      if (!is.null(existing_gp) && nrow(existing_gp) > 0) {
-        gp_out_df <- sort_gp_kernel_search(rbind(existing_gp, gp_out_df))
-      }
+      gp_out_df <- tryCatch(
+        sort_gp_kernel_search(safe_rbind(existing_gp, gp_out_df)),
+        error = function(e) {
+          warning("GP Kernel Search rbind failed, writing new data only: ", e$message)
+          gp_out_df
+        }
+      )
       openxlsx::removeWorksheet(wb, gp_sheet)
       openxlsx::addWorksheet(wb, gp_sheet)
       openxlsx::writeData(wb, sheet = gp_sheet, x = gp_out_df)
@@ -1528,7 +1646,18 @@ doe_meta_model <- function(train_data,
     }
   }
 
-  save_workbook_safe(wb, excel_file, overwrite = TRUE)
+  tryCatch(
+    save_workbook_safe(wb, excel_file, overwrite = TRUE),
+    error = function(e) {
+      # Fallback: if file is locked (e.g. open in Excel on Windows), save to a timestamped copy
+      fallback_file <- sub("\\.xlsx$",
+                           paste0("_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".xlsx"),
+                           excel_file)
+      warning(sprintf("Could not save to '%s' (%s). Saving to fallback: %s",
+                      excel_file, e$message, fallback_file))
+      save_workbook_safe(wb, fallback_file, overwrite = TRUE)
+    }
+  )
 
   cat(sprintf("\nResults written to: %s  (sheet: '%s')\n", excel_file, sheet))
   invisible(all_fits)

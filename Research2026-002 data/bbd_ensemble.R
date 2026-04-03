@@ -13,7 +13,7 @@ library(DiagrammeR)
 # 2. Function to fit DL and gridsearch (run_DOE_ANN_full())
 # 3. Function to save the results (save_model_metrics())
 
-source('./Research2026-002 data/utils.R') # complete with all necessary outputs
+source('./Research2026-002 data/utils.R')
 
 
 # LOAD the data sets
@@ -228,6 +228,44 @@ results <- doe_meta_model(
 )
 
 ####################################################################
+# BBD12
+####################################################################
+bbd12 <- read.table('./Research2026-002 data/BBD-12 data.txt'
+                    , header = TRUE
+                    , skip = 0
+                    , sep = ""
+                    , fill = TRUE
+                    , stringsAsFactors = FALSE
+                    , fileEncoding = "UTF-8")
+#------------------
+# Validate
+#------------------
+train_bbd12 <- bbd12[1:15, , drop = FALSE]
+test_bbd12 <- bbd12[16:18, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for BBD12
+train_data <- train_bbd12
+test_data <- test_bbd12
+
+responses <- 'Experimental'
+predictors <- c("A", "B",'C')
+
+rsm_formulas <- list(
+  Experimental = Experimental ~ SO(A, B, C) + I(A^2)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "BBD",
+  excel_file = "Metrics.xlsx"
+)
+
+####################################################################
 # BBD13
 ####################################################################
 train_bbd13 <- read.table('./Research2026-002 data/BBD-13 data.txt'
@@ -332,6 +370,46 @@ predictors <- c('x1',	'x2',	'x3',	'x4')
 
 rsm_formulas <- list(
   Moisture = Moisture ~ SO(x1,x2,x3,x4)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "BBD",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# BBD18
+####################################################################
+bbd18 <- read.table('./Research2026-002 data/BBD-18 data.txt'
+                    , header = TRUE
+                    , skip = 0
+                    , sep = ""
+                    , fill = TRUE
+                    , stringsAsFactors = FALSE
+                    , fileEncoding = "UTF-8")
+
+#---------------------------------
+# Train and test sets
+bbd18 <- as.data.frame(bbd18)
+train_bbd18 <- sample(bbd18[1:27,])
+test_bbd18 <- sample(bbd18[28:29,])
+
+#----------------------------------
+# Ensemble modeling for BBD18
+train_data <- train_bbd18
+test_data <- test_bbd18
+
+responses <- c("MRR","EWR")
+predictors <- c("Ip",  "Ton", "Tau", "SV")
+
+rsm_formulas <- list(
+  MRR = MRR ~ SO(Ip, Ton, Tau, SV),
+  EWR = EWR ~ SO(Ip, Ton, Tau, SV)
 )
 
 results <- doe_meta_model(

@@ -14,7 +14,7 @@ library(DiagrammeR)
 # 3. Function to save the results (save_model_metrics())
 
 
-source('./Research2026-002 data/utils.R') # save all results
+source('./Research2026-002 data/utils.R')
 
 # LOAD the date_sets
 
@@ -295,6 +295,45 @@ predictors <- c('Acid', 'Leach', 'Temp', 'Perc', 'SMBS')
 
 rsm_formulas <- list(
   Co = Co ~ SO(Acid, Leach, Temp, Perc, SMBS)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "TAG",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# TAG11
+####################################################################
+tag11 <- read.table('./Research2026-002 data/TAG-11 data.txt'
+                   , header = TRUE
+                   , skip = 0
+                   , sep = ""
+                   , fill = TRUE
+                   , stringsAsFactors = FALSE
+                   , fileEncoding = "UTF-8")
+
+#--------------------------
+# Validate
+#---------------------------------
+# Train and test sets
+train_tag11 <- as.data.frame(tag11)[1:14, ]
+test_tag11 <- as.data.frame(tag11)[15:18, ]
+#----------------------------------
+# Ensemble modeling for TAG11
+train_data <- train_tag11
+test_data <- test_tag11
+
+responses <- c('Deformations')
+predictors <- c('A', 'B', 'C', 'D', 'E', 'F')
+
+rsm_formulas <- list(
+  Deformations = Deformations ~ FO(A, B, C, D, E, F) + I(A^2) + I(B^2) + I(C^2) + I(D^2) + I(E^2) + I(F^2)
 )
 
 results <- doe_meta_model(

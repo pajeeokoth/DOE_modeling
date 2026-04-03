@@ -13,7 +13,7 @@ library(DiagrammeR)
 # 2. Function to fit DL and gridsearch (run_DOE_ANN_full())
 # 3. Function to save the results (save_model_metrics())
 
-source('./Research2026-002 data/utils.R') # save all results
+source('./Research2026-002 data/utils.R')
 
 # LOAD the date_sets
 
