@@ -1714,3 +1714,79 @@ doe_meta_model <- function(train_data,
 #   design_type  = "BBD",
 #   excel_file   = "DOE_Metrics.xlsx"
 # )
+
+############################################################
+# Cleanup: Remove h2o log/error files older than N days
+############################################################
+cleanup_h2o_logs <- function(max_age_days = 7,
+                             search_dirs = NULL,
+                             dry_run = FALSE) {
+  if (is.null(search_dirs)) {
+    search_dirs <- unique(c(
+      Sys.getenv("R_OPENXLSX_TMPDIR", unset = ""),
+      Sys.getenv("TMPDIR", unset = ""),
+      Sys.getenv("TEMP", unset = ""),
+      Sys.getenv("TMP", unset = ""),
+      file.path(getwd(), ".openxlsx_tmp"),
+      tempdir()
+    ))
+    search_dirs <- search_dirs[nzchar(search_dirs)]
+  }
+
+  cutoff <- Sys.time() - as.difftime(max_age_days, units = "days")
+  removed <- character(0)
+
+  for (d in search_dirs) {
+    if (!dir.exists(d)) next
+
+    h2o_files <- list.files(
+      d,
+      pattern     = "h2o.*\\.(log|err|out|pid)(\\.[0-9]+)?$",
+      recursive   = TRUE,
+      full.names  = TRUE
+    )
+
+    if (length(h2o_files) == 0) next
+
+    info <- file.info(h2o_files)
+    old  <- h2o_files[!is.na(info$mtime) & info$mtime < cutoff]
+
+    if (length(old) == 0) next
+
+    if (dry_run) {
+      removed <- c(removed, old)
+    } else {
+      ok <- file.remove(old)
+      removed <- c(removed, old[ok])
+    }
+  }
+
+  # Remove empty h2ologs directories
+  if (!dry_run) {
+    for (d in search_dirs) {
+      if (!dir.exists(d)) next
+      log_dirs <- list.dirs(d, recursive = TRUE, full.names = TRUE)
+      log_dirs <- grep("h2ologs", log_dirs, value = TRUE)
+      for (ld in log_dirs) {
+        if (dir.exists(ld) && length(list.files(ld, all.files = TRUE, no.. = TRUE)) == 0) {
+          unlink(ld, recursive = TRUE)
+        }
+      }
+    }
+  }
+
+  if (length(removed) > 0) {
+    cat(sprintf("[cleanup_h2o_logs] %s %d file(s) older than %d day(s):\n",
+                ifelse(dry_run, "Would remove", "Removed"),
+                length(removed), max_age_days))
+    cat(paste("  ", removed, collapse = "\n"), "\n")
+  } else {
+    cat(sprintf("[cleanup_h2o_logs] No h2o log files older than %d day(s) found.\n",
+                max_age_days))
+  }
+
+  invisible(removed)
+}
+
+# Example usage:
+# cleanup_h2o_logs(max_age_days = 7, dry_run = TRUE)
