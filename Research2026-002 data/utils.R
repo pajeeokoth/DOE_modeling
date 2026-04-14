@@ -1241,7 +1241,7 @@ doe_meta_model <- function(train_data,
   # ---- Metric helpers ----
   calc_mase <- function(actual, pred, naive_ref) {
     ok <- is.finite(actual) & is.finite(pred)
-    if (sum(ok) < 2) return(NA_real_)
+    if (sum(ok) < 1) return(NA_real_)
     ref_ok <- is.finite(naive_ref)
     if (sum(ref_ok) < 2) return(NA_real_)
     nd <- mean(abs(diff(naive_ref[ref_ok])))
@@ -1271,12 +1271,28 @@ doe_meta_model <- function(train_data,
   }
   is_already_coded <- function(df, cols) {
     if (length(cols) == 0) return(TRUE)
+    # Common CCD axial-point alpha values (rounded to 6 dp)
+    known_alphas <- round(c(
+      1,                    # factorial / BBD / PBD / 2^k
+      1.41421356,           # 2-factor CCD (sqrt(2))
+      1.68179283,           # 3-factor CCD (2^(3/4) / sqrt(3))  -- rotatable
+      1.73205081,           # sqrt(3)
+      2,                    # spherical / face-centered with alpha=2
+      2.37841423,           # 5-factor rotatable CCD
+      2.82842712            # 4-factor rotatable CCD (2^(4/4))
+    ), 6)
     all(vapply(cols, function(col) {
       vals <- suppressWarnings(as.numeric(df[[col]]))
       vals <- vals[is.finite(vals)]
       if (length(vals) == 0) return(FALSE)
-      uniq <- sort(unique(round(vals, 8)))
-      all(uniq %in% c(-1, 0, 1))
+      uniq_abs <- sort(unique(round(abs(vals), 6)))
+      # Must contain 0 (center point) and no more than 3 distinct |values|
+      # (0, 1, alpha) — covers BBD, FFD, PBD, and all CCD variants
+      if (length(uniq_abs) > 3) return(FALSE)
+      if (!(0 %in% uniq_abs))
+        return(length(uniq_abs) <= 2 && all(uniq_abs %in% known_alphas))
+      non_zero <- setdiff(uniq_abs, 0)
+      all(non_zero %in% known_alphas)
     }, logical(1)))
   }
   is_already_standardized <- function(df, cols, mean_tol = 1e-6, sd_tol = 1e-6) {
@@ -1308,12 +1324,18 @@ doe_meta_model <- function(train_data,
       test_data[[col]]  <- suppressWarnings(as.numeric(as.character(test_data[[col]])))
   }
 
-  # ---- RSM: code predictors to [-1, 0, 1] only if not already coded ----
-  rsm_scaling_label <- "NONE"
-  if (is_already_coded(train_data, predictors)) {
+  # ---- RSM: code predictors to [-1, 0, 1] ----
+  train_coded <- is_already_coded(train_data, predictors)
+  test_coded  <- is_already_coded(test_data, predictors)
+
+  if (train_coded && test_coded) {
+    # Both already coded — nothing to do
     train_rsm <- train_data
     test_rsm  <- test_data
-  } else {
+    rsm_scaling_label <- "ALREADY_CODED"
+
+  } else if (!train_coded && !test_coded) {
+    # Neither coded — code both
     if (is.null(factor_ranges)) {
       factor_ranges <- setNames(
         lapply(predictors, function(p) range(train_data[[p]], na.rm = TRUE)),
@@ -1327,20 +1349,76 @@ doe_meta_model <- function(train_data,
     train_rsm <- scaled_rsm$train
     test_rsm  <- scaled_rsm$test
     rsm_scaling_label <- "CODED"
+
+  } else if (train_coded && !test_coded) {
+    # Train already coded, test not — code test only
+    if (is.null(factor_ranges)) {
+      stop("doe_meta_model(): train predictors are already coded but test predictors ",
+           "are not. 'factor_ranges' must be supplied to code the test data.")
+    }
+    train_rsm <- train_data
+    scaled_test_rsm <- scale_design(test_data,
+                                    method        = "code",
+                                    factor_ranges = factor_ranges)
+    test_rsm <- scaled_test_rsm$train
+    rsm_scaling_label <- "ALREADY_CODED (test: CODED)"
+
+  } else {
+    # Train not coded, test already coded — code train only
+    if (is.null(factor_ranges)) {
+      factor_ranges <- setNames(
+        lapply(predictors, function(p) range(train_data[[p]], na.rm = TRUE)),
+        predictors
+      )
+      cat("[doe_meta_model] factor_ranges auto-computed from training data (min/max).\n")
+    }
+    scaled_train_rsm <- scale_design(train_data,
+                                     method        = "code",
+                                     factor_ranges = factor_ranges)
+    train_rsm <- scaled_train_rsm$train
+    test_rsm  <- test_data
+    rsm_scaling_label <- "CODED (test: ALREADY_CODED)"
   }
 
-  # ---- GP & ANN: standardize predictors only if not already standardized ----
-  std_scaling_label <- "NONE"
-  if (is_already_standardized(train_data, predictors)) {
+  # ---- GP & ANN: standardize predictors ----
+  train_standardized <- is_already_standardized(train_data, predictors)
+  test_standardized  <- is_already_standardized(test_data, predictors)
+
+  if (train_standardized && test_standardized) {
+    # Both already standardized — nothing to do
     train_std <- train_data
     test_std  <- test_data
-  } else {
+    std_scaling_label <- "ALREADY_STANDARDIZED"
+
+  } else if (!train_standardized && !test_standardized) {
+    # Neither standardized — standardize both using train statistics
     scaled_std <- scale_design(train_data, test_data,
                                method              = "standardize",
                                vars_to_standardize = predictors)
     train_std <- scaled_std$train
     test_std  <- scaled_std$test
     std_scaling_label <- "STANDARDIZED"
+
+  } else if (train_standardized && !test_standardized) {
+    # Train already standardized, test not — standardize test using its own stats
+    warning("doe_meta_model(): train predictors are already standardized but test ",
+            "predictors are not. Standardizing test using its own mean/sd. ",
+            "For best results, supply both datasets on the same scale.")
+    train_std <- train_data
+    scaled_test_std <- scale_design(test_data,
+                                    method              = "standardize",
+                                    vars_to_standardize = predictors)
+    test_std <- scaled_test_std$train
+    std_scaling_label <- "ALREADY_STANDARDIZED (test: STANDARDIZED)"
+
+  } else {
+    # Train not standardized, test already standardized — standardize train only
+    scaled_train_std <- scale_design(train_data,
+                                     method              = "standardize",
+                                     vars_to_standardize = predictors)
+    train_std <- scaled_train_std$train
+    test_std  <- test_data
+    std_scaling_label <- "STANDARDIZED (test: ALREADY_STANDARDIZED)"
   }
 
   n_factors <- length(predictors)
@@ -1526,10 +1604,9 @@ doe_meta_model <- function(train_data,
                kernel_function = gp_kernel),
       make_row("ANN",      std_scaling_label, ann_mase, ann_mape, ann_topology,
                epochs = ann_epochs, activation_function = ann_activation),
-      make_row("Ensemble", if (rsm_scaling_label == "NONE" && std_scaling_label == "NONE") "NONE"
-                            else paste(c(
-                              if (rsm_scaling_label != "NONE") "RSM:CODED" else NULL,
-                              if (std_scaling_label != "NONE") "GP/ANN:STANDARDIZED" else NULL
+      make_row("Ensemble", paste(c(
+                              paste0("RSM:", rsm_scaling_label),
+                              paste0("GP/ANN:", std_scaling_label)
                             ), collapse = "; "),
                ens_mase, ens_mape, ann_topology,
                epochs = ann_epochs, kernel_function = gp_kernel,

@@ -1,4 +1,4 @@
-Run A: dye conc (ppm) B: yeast extract (g/L) C: pH (g/L) Decolorization (%) Predicted RSM (%) Predicted ANN (%)
+Run A B C Decol Pred_RSM Pred_ANN
 1 100 1.75 6.75 90.97 89.84 89.356
 2 100 1.75 6.75 87.15 89.84 89.382
 3 50 3 6.75 94.9 94.1 92.076

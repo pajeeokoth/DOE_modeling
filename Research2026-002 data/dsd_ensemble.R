@@ -18,7 +18,7 @@ source('./Research2026-002 data/utils.R')
 # LOAD the date_sets
 
 ####################################################################
-# DSD1
+# DSD1 train coded, test not coded Also CCD24
 ####################################################################
 train_dsd1 <- read.table('./Research2026-002 data/DSD -1 train.txt', header = TRUE)
 
@@ -38,6 +38,14 @@ rsm_formulas <- list(
   y = y ~ FO(x2, x3, x7, x8) + x2:x3
 )
 
+# MUST supply factor_ranges — the original natural-unit bounds.
+factor_ranges <- list(
+  x2 = c(5, 11),
+  x3 = c(60, 120),
+  x7 = c(100, 500),
+  x8 = c(2, 8)
+)
+
 results <- doe_meta_model(
   train_data = train_data,
   test_data = test_data,
@@ -45,6 +53,7 @@ results <- doe_meta_model(
   predictors = predictors,
   rsm_formulas = rsm_formulas,
   design_type = "DSD",
+  factor_ranges = factor_ranges,     # <-- required here
   excel_file="Metrics.xlsx"
 )
 
@@ -91,10 +100,9 @@ results <- doe_meta_model(
 dsd3 <- read.table('./Research2026-002 data/DSD-3 data.txt', header = TRUE)
 
 #---------------------------------
-# Train and test sets
-dsd3 <- as.data.frame(dsd3)
-train_dsd3 <- sample(dsd3[1:24,])
-test_dsd3 <- sample(dsd3[24:28,])
+# Validate
+train_dsd3 <- dsd3[1:24, , drop = FALSE]
+test_dsd3 <- dsd3[25:28,, drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for dsd3
@@ -132,16 +140,13 @@ test_dsd4 <- sample(dsd4[15:31,])
 #----------------------------------
 # Ensemble modeling for dsd4
 train_data <- train_dsd4
-test_data <- test_dsd4
-test_data <- as.data.frame(test_data)
-test_dataa <- sample(test_data[1:11,])
-test_datap <- sample(test_data[12:16,])
+test_data <- test_data[1:12,,drop = FALSE]
+test_datap <- test_data[c(1,13:17),,drop = FALSE]
 
-responsesa <- c("ErP")
-responsesp <- c("ErA")
+responses <- c("ErP", "ErA")
 predictors <- c('Tcrys','poxy','TDew','Dwell','Heating','Rotation')
 
-rsm_formulasa <- list(
+rsm_formulas <- list(
   ErP = ErP ~ FO(Tcrys, poxy, TDew) + I(poxy^2)
 )
 rsm_formulasp <- list(
@@ -149,17 +154,17 @@ rsm_formulasp <- list(
 )
 results <- doe_meta_model(
   train_data = train_data,
-  test_data = test_dataa,
-  responses = responsesa,
+  test_data = test_data,
+  responses = responses,
   predictors = predictors,
-  rsm_formulas = rsm_formulasa,
+  rsm_formulas = rsm_formulas,
   design_type = "DSD",
   excel_file="Metrics.xlsx"
 )
 results <- doe_meta_model(
   train_data = train_data,
   test_data = test_datap,
-  responses = responsesp,
+  responses = responses,
   predictors = predictors,
   rsm_formulas = rsm_formulasp,
   design_type = "DSD",
@@ -167,7 +172,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# DSD5
+# DSD5 Also BBD13
 ####################################################################
 train_dsd5 <- read.table('./Research2026-002 data/DSD-5 data.txt', header = TRUE)
 
@@ -187,6 +192,14 @@ rsm_formulas <- list(
   Hardness = Hardness ~ FO(LT, ID, NT, PS) + I(LT^2) + I(ID^2) + I(NT^2) + I(PS^2)
 )
 
+# MUST supply factor_ranges — the original natural-unit bounds.
+factor_ranges <- list(
+  LT = c(100, 300),
+  ID = c(50, 100),
+  NT = c(240, 260),
+  PS = c(60, 120)
+)
+
 results <- doe_meta_model(
   train_data = train_data,
   test_data = test_data,
@@ -194,6 +207,7 @@ results <- doe_meta_model(
   predictors = predictors,
   rsm_formulas = rsm_formulas,
   design_type = "DSD",
+  factor_ranges = factor_ranges,     # <-- required here
   excel_file="Metrics.xlsx"
 )
 
@@ -236,10 +250,9 @@ results <- doe_meta_model(
 dsd7 <- read.table('./Research2026-002 data/DSD-7 data.txt', header = TRUE)
 
 #---------------------------------
-# Train and test sets
-dsd7 <- as.data.frame(dsd7)
-train_dsd7 <- sample(dsd7[1:15,])
-test_dsd7 <- sample(dsd7[16:16,])
+#Validate
+train_dsd7 <- dsd7[1:15, , drop = FALSE]
+test_dsd7 <- dsd7[16, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for dsd7
@@ -270,10 +283,9 @@ results <- doe_meta_model(
 dsd8 <- read.table('./Research2026-002 data/DSD-8 data.txt', header = TRUE)
 
 #---------------------------------
-# Train and test sets
-dsd8 <- as.data.frame(dsd8)
-train_dsd8 <- sample(dsd8[1:50,])
-test_dsd8 <- sample(dsd8[51:51,])
+# Validate
+train_dsd8 <- dsd8[1:50, , drop = FALSE]
+test_dsd8 <- dsd8[51, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for dsd8
@@ -298,3 +310,8 @@ results <- doe_meta_model(
   design_type = "DSD",
   excel_file="Metrics.xlsx"
 )
+
+#--------------------------------------------------------------------
+# Optional: Clean up H2O logs that are more than 7 days old. 
+# Set dry_run = FALSE to actually delete the files.
+cleanup_h2o_logs(max_age_days = 7, dry_run = TRUE)

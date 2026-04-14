@@ -90,7 +90,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# TAG3 
+# TAG3 no test set given
 ####################################################################
 tag3 <- read.table('./Research2026-002 data/TAG-3 data.txt', header = TRUE)
 
@@ -145,6 +145,14 @@ rsm_formulas <- list(
   Hardness = Hardness ~ FO(LT, ID, NT, PS) + I(LT^2) + I(ID^2) + I(NT^2) + I(PS^2)
 )
 
+# MUST supply factor_ranges — the original natural-unit bounds.
+factor_ranges <- list(
+  LT = c(100, 300),
+  ID = c(50, 100),
+  NT = c(240, 260),
+  PS = c(60, 120)
+)
+
 results <- doe_meta_model(
   train_data = train_data,
   test_data = test_data,
@@ -152,11 +160,12 @@ results <- doe_meta_model(
   predictors = predictors,
   rsm_formulas = rsm_formulas,
   design_type = "TAG",
+  factor_ranges = factor_ranges,     # <-- required here
   excel_file="Metrics.xlsx"
 )
 
 ####################################################################
-# TAG5
+# TAG5 train coded, test set not coded
 ####################################################################
 train_tag5 <- read.table('./Research2026-002 data/TAG-5 data.txt'
                          , header = TRUE)
@@ -165,28 +174,50 @@ train_tag5 <- read.table('./Research2026-002 data/TAG-5 data.txt'
 # Validate
 tag5 <- read.table('./Research2026-002 data/CCD-18 data.txt', header = TRUE)
 
-test_tag5 <- as.data.frame(tag5)[31:32, ]
 #----------------------------------
 # Ensemble modeling for TAG5
-train_data <- train_tag5
-test_data <- test_tag5
+train_data <- train_tag5[1:30, , drop = FALSE]
+test_data <- tag5[31, , drop = FALSE]
+test_data_b <- tag5[32, , drop = FALSE]
 
 responses <- c("COD","Decol")
 predictors <- c('Dye', 'DyeFe', 'H2O2Fe',  'pH')
 
 rsm_formulas <- list(
-  COD = COD ~ SO(Dye, DyeFe, H2O2Fe,  pH),
+  COD = COD ~ SO(Dye, DyeFe, H2O2Fe,  pH)
+)
+rsm_formulas_b <- list(
   Decol = Decol ~ SO(Dye, DyeFe, H2O2Fe,  pH)
 )
 
+# MUST supply factor_ranges — the original natural-unit bounds.
+factor_ranges <- list(
+  Dye = c(100, 300),
+  DyeFe = c(10, 50),
+  H2O2Fe = c(5, 25),
+  pH = c(2, 9)
+)
+
 results <- doe_meta_model(
-  train_data = train_data,
-  test_data = test_data,
-  responses = responses,
-  predictors = predictors,
-  rsm_formulas = rsm_formulas,
-  design_type = "TAG",
-  excel_file="Metrics.xlsx"
+      train_data = train_data,
+      test_data = test_data,
+      responses = responses,
+      predictors = predictors,
+      rsm_formulas = rsm_formulas,
+      design_type = "TAG",
+      factor_ranges = factor_ranges,     # <-- required here
+      excel_file="Metrics.xlsx"
+  )
+
+results <- doe_meta_model(
+      train_data = train_data,
+      test_data = test_data_b,
+      responses = responses,
+      predictors = predictors,
+      rsm_formulas = rsm_formulas_b,
+      design_type = "TAG",
+      factor_ranges = factor_ranges,     # <-- required here
+      excel_file="Metrics.xlsx"
 )
 
 ####################################################################
@@ -334,6 +365,45 @@ predictors <- c('A', 'B', 'C', 'D', 'E', 'F')
 
 rsm_formulas <- list(
   Deformations = Deformations ~ FO(A, B, C, D, E, F) + I(A^2) + I(B^2) + I(C^2) + I(D^2) + I(E^2) + I(F^2)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "TAG",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# TAG15
+####################################################################
+tag15 <- read.table('./Research2026-002 data/TAG-15 data.txt'
+                    , header = TRUE
+                    , skip = 0
+                    , sep = ""
+                    , fill = TRUE
+                    , stringsAsFactors = FALSE
+                    , fileEncoding = "UTF-8")
+
+#---------------------------------
+# Train and test sets
+tag15 <- as.data.frame(tag15)
+train_tag15 <- sample(tag15[1:9,])
+test_tag15 <- sample(tag15[9:9,])
+
+#----------------------------------
+# Ensemble modeling for TAG15
+train_data <- train_tag15
+test_data <- test_tag15
+
+responses <- "Y"
+predictors <- c("A", "B", "C", "D")
+
+rsm_formulas <- list(
+  Y = Y ~ SO(A, B, C, D)
 )
 
 results <- doe_meta_model(

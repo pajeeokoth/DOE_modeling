@@ -72,7 +72,7 @@ responses <- 'Experimental'
 predictors <- c("X1a", "X2a",'X3a')
 
 rsm_formulas <- list(
-  Experimental = Experimental ~ SO(X1a, X2a,X3a)
+  Experimental = Experimental ~ SO(X1a, X2a, X3a)
 )
 
 results <- doe_meta_model(
@@ -120,7 +120,7 @@ responses <- 'Removal'
 predictors <- c("Aa", "Ba",'Ca')
 
 rsm_formulas <- list(
-  Removal = Removal ~ SO(Aa, Ba,Ca)
+  Removal = Removal ~ SO(Aa, Ba, Ca)
 )
 
 results <- doe_meta_model(
@@ -261,6 +261,7 @@ test_ccd6 <- read.table('./Research2026-002 data/CCD-6 validate.txt'
                          , fill = TRUE
                          , stringsAsFactors = FALSE
                          , fileEncoding = "UTF-8")
+test_ccd6 <- test_ccd6[1:6, , drop = FALSE] # only use the first 6 rows for testing
 
 # Define the column names
 colnames(test_ccd6) <- c("Run","temp","t",'ph',"enz",'experiment','pred')
@@ -450,7 +451,7 @@ responses <- c("RS","PGI", 'GL')
 predictors <- c('A', 'B')
 
 rsm_formulas <- list(
-  RS = RS ~ FO(A, B) + I(A^2) + I(B^2) + A:B,
+  RS = RS ~ FO(A, B) + I(B^2) + A:B,
   PGI = PGI ~ SO(A, B),
   GL = GL ~ FO(A, B) + I(B^2)
 )
@@ -493,7 +494,7 @@ responses <- 'experiment'
 predictors <- c("x1","x2",'x3',"x4")
 
 rsm_formulas <- list(
-  experiment = experiment ~ SO(x1,x2, x3, x4)
+  experiment = experiment ~ SO(x1, x2, x3, x4)
 )
 
 results <- doe_meta_model(
@@ -507,7 +508,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD11
+# CCD11 train coded, test could be
 ####################################################################
 ccd11 <- read.csv('./Research2026-002 data/CCD-11 data.txt', header = TRUE)
 
@@ -560,7 +561,7 @@ predictors <- c("HRT","Vup","Influent_COD")
 
 rsm_formulas <- list(
   COD_removal = COD_removal ~ FO(HRT, Vup, Influent_COD) + I(HRT^2) + HRT:Vup + HRT:Influent_COD,
-  Biogas = Biogas ~ FO(HRT, Vup, Influent_COD) + I(HRT^2) + I(Vup^2) + I(Influent_COD^2) + HRT:Vup + Vup:Influent_COD + I(HRT^2):Vup + HRT:I(Vup^2)
+  Biogas = Biogas ~ FO(HRT, Vup, Influent_COD) + I(HRT^2) + I(Vup^2) + I(Influent_COD^2) + HRT:Influent_COD + Vup:Influent_COD + I(HRT^2):Vup + HRT:I(Vup^2)
 )
 
 results <- doe_meta_model(
@@ -574,7 +575,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD13
+# CCD13 train coded, test not coded
 ####################################################################
 ccd13 <- read.csv('./Research2026-002 data/CCD-13 data.csv')
 
@@ -582,7 +583,7 @@ ccd13 <- read.csv('./Research2026-002 data/CCD-13 data.csv')
 # Validate
 #------------------
 train_ccd13 <- ccd13[1:20, , drop = FALSE]
-test_ccd13 <- ccd13[21:22, , drop = FALSE]
+test_ccd13 <- ccd13[21:23, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for CCD13
@@ -597,6 +598,13 @@ rsm_formulas <- list(
   SVI = SVI ~ SO(x1, x2, x3)
 )
 
+# MUST supply factor_ranges — the original natural-unit bounds.
+factor_ranges <- list(
+  x1 = c(0, 2000),
+  x2 = c(0, 32),
+  x3 = c(2, 10)
+)
+
 results <- doe_meta_model(
   train_data = train_data,
   test_data = test_data,
@@ -604,6 +612,7 @@ results <- doe_meta_model(
   predictors = predictors,
   rsm_formulas = rsm_formulas,
   design_type = "CCD",
+  factor_ranges = factor_ranges,     # <-- required here
   excel_file = "Metrics.xlsx"
 )
 
@@ -635,7 +644,7 @@ responses <- c('therm', 'pres')
 predictors <- c("A","B",'C',"D")
 
 rsm_formulas <- list(
-  therm = therm ~ FO(A, B, C, D) + I(A^2) + A:B,
+  therm = therm ~ FO(A, B, C, D) + A:B,
   pres = pres ~ FO(A, B, C, D) + C:D
 )
 
@@ -665,9 +674,8 @@ colnames(ccd15) <- c('stdno',"Run","A","B",'C','surf',"tang")
 
 #------------------
 # Validate
-#------------------
-train_ccd15 = as.data.frame(ccd15)[1:16, ]
-test_ccd15 = as.data.frame(ccd15)[17:22, ]
+train_ccd15 <- ccd15[1:16, , drop = FALSE]
+test_ccd15 <- ccd15[17:22, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for CCD15
@@ -678,8 +686,8 @@ responses <- c("surf","tang")
 predictors <- c('A', 'B', 'C')
 
 rsm_formulas <- list(
-  surf = surf ~ FO(A) + I(C^2) + B:C,
-  tang = tang ~ SO(A, B, C) + I(C^2) + TWI(B,C)
+  surf = surf ~ FO(B) + I(C^2) + B:C,
+  tang = tang ~ FO(A, B, C) + I(C^2) + TWI(B,C)
 )
 
 results <- doe_meta_model(
@@ -708,9 +716,8 @@ colnames(ccd16) <- c("Run","x1","x2",'x3','x4',"wh")
 
 #------------------
 # Validate
-#------------------
-train_ccd16 = as.data.frame(ccd16)[1:25, ]
-test_ccd16 = as.data.frame(ccd16)[26:30, ]
+train_ccd16 <- ccd16[1:25, , drop = FALSE]
+test_ccd16 <- ccd16[26:30, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for CCD16
@@ -735,7 +742,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD17
+# CCD17 Already coded, no test set given
 ####################################################################
 ccd17 <- read.table('./Research2026-002 data/CCD-17 data.txt'
                   , header = FALSE
@@ -751,8 +758,8 @@ colnames(ccd17) <- c("Run","x1","x2",'x3','x4',"y",'rsm','error')
 #------------------
 # Validate
 #------------------
-train_ccd17 = as.data.frame(ccd17)[1:25, ]
-test_ccd17 = as.data.frame(ccd17)[26:30, ]
+train_ccd17 <- ccd17[1:25, , drop = FALSE]
+test_ccd17 <- ccd17[26:30, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for CCD17
@@ -777,14 +784,60 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD19
+# CCD18 Also TAG5
+####################################################################
+ccd18 <- read.table('./Research2026-002 data/CCD-18 data.txt'
+                  , header = TRUE
+                  , skip = 0
+                  , sep = ""
+                  , fill = TRUE
+                  , stringsAsFactors = FALSE
+                  , fileEncoding = "UTF-8")
+
+#------------------
+# Validate
+train_ccd18 <- ccd18[1:30, , drop = FALSE]
+test_ccd18 <- ccd18[31, , drop = FALSE]
+test_ccd18b <- ccd18[32, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for CCD18
+train_data <- train_ccd18
+test_data <- test_ccd18
+test_data_b <- test_ccd18b
+
+responses <- c("COD","Decol")
+predictors <- c("Dye","DyeFe","H2O2Fe","pH")
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = list(COD   = COD ~ SO(Dye,DyeFe,H2O2Fe,pH)),
+  design_type = "CCD",
+  excel_file="Metrics.xlsx"
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data_b,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = list(Decol = Decol ~ SO(Dye,DyeFe,H2O2Fe,pH)),
+  design_type = "CCD",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# CCD19 Coding off for B in test set
 ####################################################################
 ccd19 <- read.table('./Research2026-002 data/CCD-19 data.txt', header = TRUE)
 
 #------------------
 # Train and test split
-train_ccd19 = as.data.frame(ccd19)[1:30, ]
-test_ccd19 = as.data.frame(ccd19)[31:33, ]
+train_ccd19 <- ccd19[1:30, , drop = FALSE]
+test_ccd19 <- ccd19[31:33, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for CCD19
@@ -798,6 +851,54 @@ rsm_formulas <- list(
   Yield = Yield ~ SO(A,B,C,D)
 )
 
+# MUST supply factor_ranges — the original natural-unit bounds.
+factor_ranges <- list(
+  A = c(1, 5),
+  B = c(10, 30),
+  C = c(40, 200),
+  D = c(60, 300)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "CCD",
+  factor_ranges = factor_ranges,     # <-- required here
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# CCD20
+####################################################################
+ccd20 <- read.table('./Research2026-002 data/CCD-20 data.txt'
+                  , header = TRUE
+                  , skip = 0
+                  , sep = ""
+                  , fill = TRUE
+                  , stringsAsFactors = FALSE
+                  , fileEncoding = "UTF-8")
+
+#------------------
+# Validate
+#------------------
+train_ccd20 <- ccd20[1:20, , drop = FALSE]
+test_ccd20 <- ccd20[21:21, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for CCD20
+train_data <- train_ccd20
+test_data <- test_ccd20
+
+responses <- "wear"
+predictors <- c("Load","speed",'distance')
+
+rsm_formulas <- list(
+  wear = wear ~ FO(Load,speed,distance) + I(Load^2) + I(speed^2) + TWI(distance,Load) + TWI(speed,distance)
+)
+
 results <- doe_meta_model(
   train_data = train_data,
   test_data = test_data,
@@ -809,7 +910,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD21
+# CCD21 train coded, test not coded
 ####################################################################
 ccd21 <- read.table('./Research2026-002 data/CCD-21 data.txt', header = TRUE)
 #------------------
@@ -829,6 +930,15 @@ rsm_formulas <- list(
   Kerf = Kerf ~ FO(A,B,C,D,E) + TWI(A,B,C,D,E)
 )
 
+# MUST supply factor_ranges — the original natural-unit bounds.
+factor_ranges <- list(
+  A = c(1800, 2000),
+  B = c(550, 700),
+  C = c(1700, 1850),
+  D = c(80, 85),
+  E = c(1.5, 3)
+)
+
 results <- doe_meta_model(
   train_data = train_data,
   test_data = test_data,
@@ -836,6 +946,7 @@ results <- doe_meta_model(
   predictors = predictors,
   rsm_formulas = rsm_formulas,
   design_type = "CCD",
+  factor_ranges = factor_ranges,     # <-- required here
   excel_file="Metrics.xlsx"
 )
 
@@ -872,3 +983,81 @@ results <- doe_meta_model(
   design_type = "CCD",
   excel_file="Metrics.xlsx"
 )
+
+####################################################################
+# CCD23 Not sure which paper this is from
+####################################################################
+ccd23 <- read.table('./Research2026-002 data/CCD-23 data.txt', header = TRUE)
+
+#------------------
+# Validate
+#------------------
+train_ccd23 <- ccd23[1:27, , drop = FALSE]
+test_ccd23 <- ccd23[28:33, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for CCD23
+train_data <- train_ccd23
+test_data <- test_ccd23
+
+responses <- c('SF_MPa', 'E_GPa')
+predictors <- c("A","B","C","D")
+
+rsm_formulas <- list(
+  SF_MPa = SF_MPa ~ SO(A,B,C,D),
+  E_GPa = E_GPa ~ SO(A,B,C,D)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "CCD",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# CCD24 Also DSD1
+####################################################################
+train_ccd24 <- read.table('./Research2026-002 data/CCD-24 data.txt', header = TRUE)
+
+#------------------------
+# Validate
+test_ccd24 <- read.table('./Research2026-002 data/DSD-1 validation.txt', header = TRUE)
+
+#----------------------------------
+# Ensemble modeling for ccd24
+train_data <- train_ccd24
+test_data <- test_ccd24
+
+responses <- c("y")
+predictors <- c("x3", 'x7', 'x8')
+ 
+rsm_formulas <- list(
+  y = y ~ FO(x3, x7, x8) + x3:x7 + x3:x8 + I(x7^2) + I(x8^2)
+)
+
+# MUST supply factor_ranges — the original natural-unit bounds.
+factor_ranges <- list(
+  x3 = c(39.55, 140.45),
+  x7 = c(65.91, 234.09),
+  x8 = c(0.45, 10.54)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "CCD",
+  factor_ranges = factor_ranges,     # <-- required here
+  excel_file="Metrics.xlsx"
+)
+
+#--------------------------------------------------------------------
+# Optional: Clean up H2O logs that are more than 7 days old. 
+# Set dry_run = FALSE to actually delete the files.
+cleanup_h2o_logs(max_age_days = 7, dry_run = FALSE)  # Set to FALSE to delete files

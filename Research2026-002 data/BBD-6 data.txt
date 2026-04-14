@@ -1,4 +1,4 @@
-Run order Std. order PES conc. (wt.%) PVP conc. (K30 wt.%) BF (% of water) Air gap (cm) PWP (L/m2 h bar) Porosity (%)
+Run order PES PVP  BF  Airgap  PWP  Porosity
 E1 12 17 3 60 50 98.1 48.1
 E2 18 17 3 20 37 45 46.6
 E3 4 17 6 60 37 103.2 48.6
