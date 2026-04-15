@@ -21,13 +21,11 @@ source('./Research2026-002 data/utils.R')
 ####################################################################
 # TAG1
 ####################################################################
-train_tag1 <- read.table('./Research2026-002 data/TAG-1 data.txt'
-                         , header = TRUE)
+train_tag1 <- read.table('./Research2026-002 data/TAG-1 data.txt', header = TRUE)
 
 #------------------------
 # Validate
-test_tag1 <- read.table('./Research2026-002 data/TAG-1 test.txt'
-                        , header = TRUE)
+test_tag1 <- read.table('./Research2026-002 data/TAG-1 test.txt', header = TRUE)
 
 #----------------------------------
 # Ensemble modeling for TAG1
@@ -58,10 +56,8 @@ tag2 <- read.table('./Research2026-002 data/TAG-2 data.txt', header = TRUE)
 
 #---------------------------
 # Validate
-#---------------------------
-tag2 <- as.data.frame(tag2)
-train_tag2 <- sample(tag2[1:25,])
-test_tag2 <- sample(tag2[25:26,])
+train_tag2 <- tag2[1:25,, drop = FALSE]
+test_tag2 <- tag2[26:27,, drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for TAG2
@@ -72,11 +68,11 @@ responses <- c("SB","TY", 'ET', 'FB', 'EF')
 predictors <- c('SW', 'AINF', 'TL', 'PS', 'TN', 'TB')
  
 rsm_formulas <- list(
-  SB = SB ~ FO(SW, AINF,TL,PS,TN,TB) + I(SW^2) + I(AINF^2) + I(TL^2) + I(PS^2) + I(TN^2) + I(TB^2) + SW:AINF + SW:TL + SW:PS + SW:TN + AINF:PS,
-  TY = TY ~ SO(SW, AINF,TL,PS,TN,TB) + I(SW^2) + I(AINF^2) + I(TL^2) + I(PS^2) + I(TN^2) + I(TB^2) + SW:AINF + SW:TL + SW:PS + SW:TN + AINF:PS,
-  ET = ET ~ FO(SW, AINF,TL,PS,TN,TB) + I(SW^2) + I(AINF^2) + I(TL^2) + I(PS^2) + I(TN^2) + I(TB^2) + SW:AINF + SW:TL + SW:PS + SW:TN + AINF:PS,
-  FB = FB ~ FO(SW, AINF,TL,PS,TN,TB) + I(SW^2) + I(AINF^2) + I(TL^2) + I(PS^2) + I(TN^2) + I(TB^2) + SW:AINF + SW:TL + SW:PS + SW:TN + AINF:PS,
-  EF = EF ~ FO(SW, AINF,TL,PS,TN,TB) + I(SW^2) + I(AINF^2) + I(TL^2) + I(PS^2) + I(TN^2) + I(TB^2) + SW:AINF + SW:TL + SW:PS + SW:TN + AINF:PS
+  SB = SB ~ FO(SW, AINF,TL,PS,TN,TB) + I(SW^2) + I(AINF^2) + I(TL^2) + I(PS^2) + I(TN^2) + I(TB^2),
+  TY = TY ~ SO(SW, AINF,TL,PS,TN,TB) + I(SW^2) + I(AINF^2) + I(TL^2) + I(PS^2) + I(TN^2) + I(TB^2),
+  ET = ET ~ FO(SW, AINF,TL,PS,TN,TB) + I(SW^2) + I(AINF^2) + I(TL^2) + I(PS^2) + I(TN^2) + I(TB^2),
+  FB = FB ~ FO(SW, AINF,TL,PS,TN,TB) + I(SW^2) + I(AINF^2) + I(TL^2) + I(PS^2) + I(TN^2) + I(TB^2),
+  EF = EF ~ FO(SW, AINF,TL,PS,TN,TB) + I(SW^2) + I(AINF^2) + I(TL^2) + I(PS^2) + I(TN^2) + I(TB^2)
 )
 
 results <- doe_meta_model(
@@ -90,26 +86,57 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# TAG3 no test set given
+# TAG2A
+####################################################################
+tag2A <- read.csv('./Research2026-002 data/TAG-2a data.csv', header = TRUE)
+
+#---------------------------------
+# Validate
+train_tag2A <- tag2A[1:9,, drop = FALSE]
+test_tag2A <- tag2A[10,, drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for TAG2A
+train_data <- train_tag2A
+test_data <- test_tag2A
+
+responses <- c("Ra")
+predictors <- c("Spindle", "Feed", "Depth")
+
+rsm_formulas <- list(
+  Ra = Ra ~ FO(Spindle, Feed, Depth)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "TAG",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# TAG3 also BBD15 and CCD17 no test set
 ####################################################################
 tag3 <- read.table('./Research2026-002 data/TAG-3 data.txt', header = TRUE)
 
 #---------------------------------
-# Train and test sets
-tag3 <- as.data.frame(tag3)
-train_tag3 <- sample(tag3[1:24,])
-test_tag3 <- sample(tag3[25:27,])
+# Validate
+train_tag3 <- tag3[1:22, , drop = FALSE]
+test_tag3 <- tag3[23:27, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for TAG3
 train_data <- train_tag3
 test_data <- test_tag3
 
-responses <- c("y")
-predictors <- c('f1', 'f2', 'f3', 'f4')
+responses <- "y"
+predictors <- c("f1", "f2",  "f3", "f4")
 
 rsm_formulas <- list(
-  y = y ~ FO(f1, f2, f3, f4) + I(f1^2) + I(f2^2) + I(f3^2) + I(f4^2) + f1:f2 + f1:f4 + f2:f4
+  y = y ~ FO(f1, f2, f3, f4) + I(f1^2) + I(f2^2) + I(f3^2) + I(f4^2) + f1:f4 +f2:f4
 )
 
 results <- doe_meta_model(
@@ -123,15 +150,13 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# TAG4
+# TAG4 Also BBD13 and DSD5
 ####################################################################
-train_tag4 <- read.table('./Research2026-002 data/TAG-4 data.txt'
-                         , header = TRUE)
+train_tag4 <- read.table('./Research2026-002 data/TAG-4 data.txt', header = TRUE)
 
 #--------------------------
 # Validate
-test_tag4 <- read.table('./Research2026-002 data/BBD-13 dsd5tag4 test.txt'
-                        , header = TRUE)
+test_tag4 <- read.table('./Research2026-002 data/BBD-13 dsd5tag4 test.txt', header = TRUE)
 
 #----------------------------------
 # Ensemble modeling for TAG4
@@ -165,10 +190,9 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# TAG5 train coded, test set not coded
+# TAG5 Also CCD18 train coded, test set not coded
 ####################################################################
-train_tag5 <- read.table('./Research2026-002 data/TAG-5 data.txt'
-                         , header = TRUE)
+train_tag5 <- read.table('./Research2026-002 data/TAG-5 data.txt', header = TRUE)
 
 #--------------------------
 # Validate
@@ -223,18 +247,12 @@ results <- doe_meta_model(
 ####################################################################
 # TAG6
 ####################################################################
-tag6 <- read.table('./Research2026-002 data/TAG-6 data.txt'
-                   , header = TRUE
-                   , skip = 0
-                   , sep = ""
-                   , fill = TRUE
-                   , stringsAsFactors = FALSE
-                   , fileEncoding = "UTF-8")
+tag6 <- read.table('./Research2026-002 data/TAG-6 data.txt', header = TRUE)
 
 #---------------------------------
-# Train and test sets
-train_tag6 <- as.data.frame(tag6)[1:16, ]
-test_tag6 <- as.data.frame(tag6)[17:17, ]
+# Validate
+train_tag6 <- tag6[1:16, , drop = FALSE]
+test_tag6 <- tag6[17, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for TAG6
@@ -259,23 +277,12 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# TAG7
+# TAG7 Also FFD2
 ####################################################################
-train_tag7 <- read.table('./Research2026-002 data/TAG-7 data.txt'
-                   , header = TRUE
-                   , skip = 0
-                   , sep = ""
-                   , fill = TRUE
-                   , stringsAsFactors = FALSE
-                   , fileEncoding = "UTF-8")
+train_tag7 <- read.table('./Research2026-002 data/TAG-7 data.txt', header = TRUE)
 
-test_tag7 <- read.table('./Research2026-002 data/TAG-7 FFD2 test.txt'
-                        , header = TRUE
-                        , skip = 0
-                        , sep = ""
-                        , fill = TRUE
-                        , stringsAsFactors = FALSE
-                        , fileEncoding = "UTF-8")
+test_tag7 <- read.table('./Research2026-002 data/TAG-7 FFD2 test.txt', header = TRUE)
+
 #----------------------------------
 # Ensemble modeling for TAG7
 train_data <- train_tag7
@@ -286,7 +293,7 @@ predictors <- c('vc', 'f', 'alpha')
 
 rsm_formulas <- list(
   Ra = Ra ~ SO(vc, f, alpha),
-  MRR = MRR ~ SO(vc, f, alpha)
+  # MRR = MRR ~ SO(vc, f, alpha)
 )
 
 results <- doe_meta_model(
@@ -302,20 +309,14 @@ results <- doe_meta_model(
 ####################################################################
 # TAG8
 ####################################################################
-tag8 <- read.table('./Research2026-002 data/TAG-8 data.txt'
-                   , header = TRUE
-                   , skip = 0
-                   , sep = ""
-                   , fill = TRUE
-                   , stringsAsFactors = FALSE
-                   , fileEncoding = "UTF-8")
+tag8 <- read.table('./Research2026-002 data/TAG-8 data.txt', header = TRUE)
 
 #--------------------------
 # Validate
 #---------------------------------
 # Train and test sets
-train_tag8 <- as.data.frame(tag8)[1:23, ]
-test_tag8 <- as.data.frame(tag8)[24:25, ]
+train_tag8 <- tag8[1:25, , drop = FALSE]
+test_tag8 <- tag8[26:27, , drop = FALSE]
 #----------------------------------
 # Ensemble modeling for TAG8
 train_data <- train_tag8
@@ -339,22 +340,86 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# TAG11
+# TAG9
 ####################################################################
-tag11 <- read.table('./Research2026-002 data/TAG-11 data.txt'
-                   , header = TRUE
-                   , skip = 0
-                   , sep = ""
-                   , fill = TRUE
-                   , stringsAsFactors = FALSE
-                   , fileEncoding = "UTF-8")
+tag9 <- read.table('./Research2026-002 data/TAG-9 data.txt', header = TRUE)
+
+#---------------------------
+# Convert CE to WET:-1,MQL:0,DRY2:1
+tag9$CEc <- ifelse(tag9$CE == "WET", -1, ifelse(tag9$CE == "MQL", 0, 1))
+# Convert tool_type to UNCOATED:-1,PVD:0,CVD:1
+tag9$TT <- ifelse(tag9$Tool_type == "UNCOATED", -1, ifelse(tag9$Tool_type == "PVD", 0, 1))
 
 #--------------------------
 # Validate
-#---------------------------------
-# Train and test sets
-train_tag11 <- as.data.frame(tag11)[1:14, ]
-test_tag11 <- as.data.frame(tag11)[15:18, ]
+train_tag9 <- tag9[1:27, , drop = FALSE]
+test_tag9 <- tag9[28, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for TAG9
+train_data <- train_tag9
+test_data <- test_tag9
+
+responses <- c('TW')
+predictors <- c('CEc', 'NR', 'FR', 'DOC', 'TT')
+
+rsm_formulas <- list(
+  TW = TW ~ FO(CEc, NR, FR, DOC, TT) + CEc:NR + CEc:FR + CEc:TT
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "TAG",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# TAG10
+####################################################################
+tag10 <- read.table('./Research2026-002 data/TAG-10 data.txt', header = TRUE)
+
+#--------------------------
+# Validate
+train_tag10 <- tag10[1:9, , drop = FALSE]
+test_tag10 <- tag10[10, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for TAG10
+train_data <- train_tag10
+test_data <- test_tag10
+
+responses <- c("COF", "Ws")
+predictors <- c('L', 'S', 'D')
+
+rsm_formulas <- list(
+  COF = COF ~ SO(L, S, D),
+  Ws = Ws ~ SO(L, S, D)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "TAG",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# TAG11
+####################################################################
+tag11 <- read.table('./Research2026-002 data/TAG-11 data.txt', header = TRUE)
+
+#--------------------------
+# Validate
+train_tag11 <- tag11[1:15, , drop = FALSE]
+test_tag11 <- tag11[16:18, , drop = FALSE]
+
 #----------------------------------
 # Ensemble modeling for TAG11
 train_data <- train_tag11
@@ -378,32 +443,25 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# TAG15
+# TAG12 Need to read the paper to understand factors and responses
 ####################################################################
-tag15 <- read.table('./Research2026-002 data/TAG-15 data.txt'
-                    , header = TRUE
-                    , skip = 0
-                    , sep = ""
-                    , fill = TRUE
-                    , stringsAsFactors = FALSE
-                    , fileEncoding = "UTF-8")
+tag12 <- read.table('./Research2026-002 data/TAG-12 data.txt', header = TRUE)
 
-#---------------------------------
-# Train and test sets
-tag15 <- as.data.frame(tag15)
-train_tag15 <- sample(tag15[1:9,])
-test_tag15 <- sample(tag15[9:9,])
+#--------------------------
+# Validate
+train_tag12 <- tag12[1:16, , drop = FALSE]
+test_tag12 <- tag12[17, , drop = FALSE]
 
 #----------------------------------
-# Ensemble modeling for TAG15
-train_data <- train_tag15
-test_data <- test_tag15
+# Ensemble modeling for TAG12
+train_data <- train_tag12
+test_data <- test_tag12
 
-responses <- "Y"
-predictors <- c("A", "B", "C", "D")
+responses <- c("WGRG")
+predictors <- c("Density", "Elongation", "Aspect_ratio", "Dilution")
 
 rsm_formulas <- list(
-  Y = Y ~ SO(A, B, C, D)
+  WGRG = WGRG ~ FO(Density, Elongation, Aspect_ratio, Dilution)
 )
 
 results <- doe_meta_model(
@@ -415,3 +473,121 @@ results <- doe_meta_model(
   design_type = "TAG",
   excel_file="Metrics.xlsx"
 )
+
+####################################################################
+# TAG13
+####################################################################
+tag13 <- read.table('./Research2026-002 data/TAG-13 data.txt', header = TRUE)
+
+#--------------------------
+# Validate
+train_tag13 <- tag13[1:32, , drop = FALSE]
+test_tag13 <- tag13[33, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for TAG13
+train_data <- train_tag13
+test_data <- test_tag13
+
+responses <- c("Impact")
+predictors <- c("X1", "X2", "X3")
+
+rsm_formulas <- list(
+  Impact = Impact ~ FO(X1, X2, X3) + I(X1^2) + I(X2^2) + I(X3^2)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "TAG",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# TAG14 Also CCD21
+####################################################################
+train_tag14 <- read.table('./Research2026-002 data/TAG-14 data.txt', header = TRUE)
+#--------------------------
+# Validate
+test_tag14 <- read.table('./Research2026-002 data/CCD-21 test.txt', header = TRUE)
+
+#----------------------------------
+# Ensemble modeling for TAG14
+train_data <- train_tag14
+test_data <- test_tag14
+
+responses <- c("Kerf")
+predictors <- c("A", "B", "C", "D", "E")
+
+rsm_formulas <- list(
+  Kerf = Kerf ~ FO(A, B, C, D, E) + TWI(A, B, C, D, E)
+)
+
+# MUST supply factor_ranges — the original natural-unit bounds.
+factor_ranges <- list(
+  A = c(1800, 2000),
+  B = c(550, 700),
+  C = c(1700, 1850),
+  D = c(80, 85),
+  E = c(1.5, 3)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "TAG",
+  factor_ranges = factor_ranges,     # <-- required here
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# TAG15 Also BBD19
+####################################################################
+train_tag15 <- read.table('./Research2026-002 data/TAG-15 data.txt', header = TRUE)
+
+#---------------------------------
+# Validate
+tag15_test <- read.table('./Research2026-002 data/BBD-19 test.txt', header = TRUE)
+test_tag15 <- tag15_test[28, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for TAG15
+train_data <- train_tag15
+test_data <- test_tag15
+
+responses <- "Y"
+predictors <- c("Power",  "Pressure", "Frequency", "Speed")
+
+rsm_formulas <- list(
+  Y = Y ~ SO(Power, Pressure, Frequency, Speed)
+)
+
+# MUST supply factor_ranges — the original natural-unit bounds.
+factor_ranges <- list(
+  Power = c(1900, 2000),
+  Pressure = c(15, 25),
+  Frequency = c(19000, 20000),
+  Speed = c(2.5, 5.5)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "TAG",
+  factor_ranges = factor_ranges,     # <-- required here
+  excel_file="Metrics.xlsx"
+)
+
+#--------------------------------------------------------------------
+# Optional: Clean up H2O logs that are more than 7 days old. 
+# Set dry_run = FALSE to delete the files.
+cleanup_h2o_logs(max_age_days = 7, dry_run = FALSE)

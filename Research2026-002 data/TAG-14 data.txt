@@ -1,4 +1,4 @@
-Standard	Exp_Run	A	B	C	D	E	KW_mm	EtaKW_dB
+Standard	Exp_Run	A	B	C	D	E	Kerf	EtaKW_dB
 1	2	1	1	1	1	1	0.430	7.341
 2	27	1	1	1	1	2	0.440	7.141
 3	12	1	1	1	1	3	0.452	6.897

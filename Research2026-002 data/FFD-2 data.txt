@@ -1,4 +1,4 @@
-Exp	vc	f	alpha	Ra	MRR
+Exp	vc	f	alpha	Ra	Rapred
 1	75	0.125	0.08	0.87	0.82
 2	175	0.025	0.08	0.24	0.25
 3	175	0.075	0.10	0.36	0.33

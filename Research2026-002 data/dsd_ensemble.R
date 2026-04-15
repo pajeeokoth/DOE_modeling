@@ -115,6 +115,18 @@ predictors <- c('A', 'B', 'C', 'D', 'E', 'Fa', 'G', 'H', 'I', 'J')
 rsm_formulas <- list(
   Yield = Yield ~ SO(A,	B,	C,	D,	E,	Fa,	G,	H,	I,	J)
 )
+factor_ranges <- list(
+  A = c(-1, 1),
+  B = c(-1, 1),
+  C = c(-1, 1),
+  D = c(-1, 1),
+  E = c(-1, 1),
+  Fa = c(-1, 1),
+  G = c(-1, 1),
+  H = c(-1, 1),
+  I = c(-1, 1),
+  J = c(-1, 1)
+)
 
 results <- doe_meta_model(
   train_data = train_data,
@@ -123,6 +135,7 @@ results <- doe_meta_model(
   predictors = predictors,
   rsm_formulas = rsm_formulas,
   design_type = "DSD",
+  factor_ranges = factor_ranges,     # <-- required here
   excel_file="Metrics.xlsx"
 )
 
@@ -140,10 +153,11 @@ test_dsd4 <- sample(dsd4[15:31,])
 #----------------------------------
 # Ensemble modeling for dsd4
 train_data <- train_dsd4
-test_data <- test_data[1:12,,drop = FALSE]
-test_datap <- test_data[c(1,13:17),,drop = FALSE]
+test_data <- test_dsd4[1:12,,drop = FALSE]
+test_datap <- test_dsd4[c(1,13:17),,drop = FALSE]
 
-responses <- c("ErP", "ErA")
+responses <- c("ErP")
+# responsesb <- c("ErA")
 predictors <- c('Tcrys','poxy','TDew','Dwell','Heating','Rotation')
 
 rsm_formulas <- list(
@@ -164,7 +178,7 @@ results <- doe_meta_model(
 results <- doe_meta_model(
   train_data = train_data,
   test_data = test_datap,
-  responses = responses,
+  responses = c("ErA"),
   predictors = predictors,
   rsm_formulas = rsm_formulasp,
   design_type = "DSD",
@@ -172,7 +186,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# DSD5 Also BBD13
+# DSD5 Also BBD13 and TAG3
 ####################################################################
 train_dsd5 <- read.table('./Research2026-002 data/DSD-5 data.txt', header = TRUE)
 

@@ -1273,6 +1273,7 @@ doe_meta_model <- function(train_data,
     if (length(cols) == 0) return(TRUE)
     # Common CCD axial-point alpha values (rounded to 6 dp)
     known_alphas <- round(c(
+      0.33333333,           # 1/3 — intermediate coded level (e.g. DSD)
       1,                    # factorial / BBD / PBD / 2^k
       1.41421356,           # 2-factor CCD (sqrt(2))
       1.68179283,           # 3-factor CCD (2^(3/4) / sqrt(3))  -- rotatable
@@ -1381,18 +1382,25 @@ doe_meta_model <- function(train_data,
   }
 
   # ---- GP & ANN: standardize predictors ----
-  train_standardized <- is_already_standardized(train_data, predictors)
-  test_standardized  <- is_already_standardized(test_data, predictors)
+  # Use RSM-aligned data (train_rsm / test_rsm) so both datasets are on
+  # the same scale before standardizing.  This avoids the bug where coded
+  # train (-1,0,1) and natural-unit test get standardized with mismatched
+  # statistics (e.g. DSD-1).
+  train_for_std <- train_rsm
+  test_for_std  <- test_rsm
+
+  train_standardized <- is_already_standardized(train_for_std, predictors)
+  test_standardized  <- is_already_standardized(test_for_std, predictors)
 
   if (train_standardized && test_standardized) {
     # Both already standardized — nothing to do
-    train_std <- train_data
-    test_std  <- test_data
+    train_std <- train_for_std
+    test_std  <- test_for_std
     std_scaling_label <- "ALREADY_STANDARDIZED"
 
   } else if (!train_standardized && !test_standardized) {
     # Neither standardized — standardize both using train statistics
-    scaled_std <- scale_design(train_data, test_data,
+    scaled_std <- scale_design(train_for_std, test_for_std,
                                method              = "standardize",
                                vars_to_standardize = predictors)
     train_std <- scaled_std$train
@@ -1404,8 +1412,8 @@ doe_meta_model <- function(train_data,
     warning("doe_meta_model(): train predictors are already standardized but test ",
             "predictors are not. Standardizing test using its own mean/sd. ",
             "For best results, supply both datasets on the same scale.")
-    train_std <- train_data
-    scaled_test_std <- scale_design(test_data,
+    train_std <- train_for_std
+    scaled_test_std <- scale_design(test_for_std,
                                     method              = "standardize",
                                     vars_to_standardize = predictors)
     test_std <- scaled_test_std$train
@@ -1413,11 +1421,11 @@ doe_meta_model <- function(train_data,
 
   } else {
     # Train not standardized, test already standardized — standardize train only
-    scaled_train_std <- scale_design(train_data,
+    scaled_train_std <- scale_design(train_for_std,
                                      method              = "standardize",
                                      vars_to_standardize = predictors)
     train_std <- scaled_train_std$train
-    test_std  <- test_data
+    test_std  <- test_for_std
     std_scaling_label <- "STANDARDIZED (test: ALREADY_STANDARDIZED)"
   }
 

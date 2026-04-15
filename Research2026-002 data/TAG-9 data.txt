@@ -26,3 +26,4 @@ RUN   CE   NR    FR    DOC       Tool_type   TW
 25    MQL  1.2   0.15  1.5       PVD         0.161
 26    MQL  1.2   0.25  0.5       CVD         0.049
 27    MQL  1.2   0.35  1.0       UNCOATED    0.066
+1     MQL  1.2   0.35  0.5       CVD         0.0422

@@ -793,5 +793,4 @@ results <- doe_meta_model(
 #--------------------------------------------------------------------
 # Optional: Clean up H2O logs that are more than 7 days old. 
 # Set dry_run = FALSE to actually delete the files.
-#cleanup_h2o_logs(max_age_days = 7, dry_run = TRUE)
-cleanup_h2o_logs(max_age_days = 7, dry_run = FALSE) # delete h2o logfiles
+cleanup_h2o_logs(max_age_days = 7, dry_run = FALSE) 
