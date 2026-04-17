@@ -1,4 +1,4 @@
-Trial  PotatoExt(%)  Glucose(g/L)  KH2PO4(g/L)  MgSO4·7H2O(g/L)  Vb1(mg/L)  Peptone(g/L)  Y(g/L)
+Trial  A            B             C           D                   E         F             Y
 1      -1            1             1            -1                1          1             8.28
 2      1             1             -1           1                 1          1             3.03
 3      0             0             0            0                 0          0             4.71

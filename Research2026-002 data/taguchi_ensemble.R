@@ -200,11 +200,10 @@ tag5 <- read.table('./Research2026-002 data/CCD-18 data.txt', header = TRUE)
 
 #----------------------------------
 # Ensemble modeling for TAG5
-train_data <- train_tag5[1:30, , drop = FALSE]
+train_data <- train_tag5
 test_data <- tag5[31, , drop = FALSE]
 test_data_b <- tag5[32, , drop = FALSE]
 
-responses <- c("COD","Decol")
 predictors <- c('Dye', 'DyeFe', 'H2O2Fe',  'pH')
 
 rsm_formulas <- list(
@@ -225,7 +224,7 @@ factor_ranges <- list(
 results <- doe_meta_model(
       train_data = train_data,
       test_data = test_data,
-      responses = responses,
+      responses = c("COD"),
       predictors = predictors,
       rsm_formulas = rsm_formulas,
       design_type = "TAG",
@@ -236,7 +235,7 @@ results <- doe_meta_model(
 results <- doe_meta_model(
       train_data = train_data,
       test_data = test_data_b,
-      responses = responses,
+      responses = c("Decol"),
       predictors = predictors,
       rsm_formulas = rsm_formulas_b,
       design_type = "TAG",
@@ -277,7 +276,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# TAG7 Also FFD2
+# TAG7 Also FFD2 #MRR has no validation data
 ####################################################################
 train_tag7 <- read.table('./Research2026-002 data/TAG-7 data.txt', header = TRUE)
 
@@ -288,12 +287,11 @@ test_tag7 <- read.table('./Research2026-002 data/TAG-7 FFD2 test.txt', header = 
 train_data <- train_tag7
 test_data <- test_tag7
 
-responses <- c("Ra")#,"MRR") #MRR has no validation data
+responses <- c("Ra")
 predictors <- c('vc', 'f', 'alpha')
 
 rsm_formulas <- list(
-  Ra = Ra ~ SO(vc, f, alpha),
-  # MRR = MRR ~ SO(vc, f, alpha)
+  Ra = Ra ~ SO(vc, f, alpha)
 )
 
 results <- doe_meta_model(
@@ -553,7 +551,7 @@ train_tag15 <- read.table('./Research2026-002 data/TAG-15 data.txt', header = TR
 
 #---------------------------------
 # Validate
-tag15_test <- read.table('./Research2026-002 data/BBD-19 test.txt', header = TRUE)
+tag15_test <- read.table('./Research2026-002 data/BBD-19 data.txt', header = TRUE)
 test_tag15 <- tag15_test[28, , drop = FALSE]
 
 #----------------------------------

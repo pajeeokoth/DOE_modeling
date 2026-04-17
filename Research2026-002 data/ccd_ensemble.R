@@ -25,11 +25,9 @@ train_ccd1 <- read.table('./Research2026-002 data/CCD-1 data.txt'
                          , stringsAsFactors = FALSE)
 #------------------
 # Validate
-# -----------------
 test_ccd1 <- read.table('./Research2026-002 data/CCd-1 validate data.txt'
                         , header = TRUE
                         , stringsAsFactors = FALSE)
-
 
 #------------------
 # Ensemble modeling for CCD1
@@ -56,11 +54,10 @@ results <- doe_meta_model(
 ####################################################################
 # CCD2
 ####################################################################
-train_ccd2 <- read.csv('./Research2026-002 data/CCD-2 data.txt'
-                         , header = TRUE)
+train_ccd2 <- read.csv('./Research2026-002 data/CCD-2 data.txt', header = TRUE)
+
 #------------------
 # Validate
-#------------------
 test_ccd2 <- read.table('./Research2026-002 data/CCD-2 validate data.txt', header = TRUE)
 
 #------------------
@@ -100,7 +97,6 @@ colnames(train_ccd3) <- c("Run", "Ac", "Bc",  "Cc", 'Aa','Ba','Ca', "Removal")
 
 #------------------
 # Validate
-#------------------
 test_ccd3 <- read.table('./Research2026-002 data/CCD-3 validate data.txt'
                         , header = FALSE
                         , skip = 3
@@ -134,7 +130,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD4
+# CCD4 Also FCCD1
 ####################################################################
 train_ccd4 <- read.table('./Research2026-002 data/CCD-4 design.txt'
                          , header = FALSE
@@ -148,7 +144,6 @@ colnames(train_ccd4) <- c("Run", "pulse_on", "pulse_off",  "serve_volt"
                           ,'peak_cur', 'wire', "kerf_width",'asr','mrr')
 #------------------
 # Validate
-#------------------
 test_ccd4 <- read.table('./Research2026-002 data/CCD-4 validate.txt'
                         , header = FALSE
                         , skip = 3
@@ -156,7 +151,6 @@ test_ccd4 <- read.table('./Research2026-002 data/CCD-4 validate.txt'
                         , fill = TRUE
                         , stringsAsFactors = FALSE
                         , fileEncoding = "UTF-8")
-
 # Define the column names
 colnames(test_ccd4) <- c("Run", "pulse_on", "pulse_off",  "serve_volt", 'peak_cur'
                          ,'wire', "kerf_width",'asr','mrr','rsm_pk','rsm_pr'
@@ -197,13 +191,11 @@ train_ccd5 <- read.table('./Research2026-002 data/CCD-5 design.txt'
                          , fill = TRUE
                          , stringsAsFactors = FALSE
                          , fileEncoding = "UTF-8")
-
 # Define the column names
 colnames(train_ccd5) <- c("Run", "x1", "x2",  "x3", 'x4','experiment', "rsm_p",'rsm_d','ann_p','ann_d')
 
 #------------------
 # Validate
-#------------------
 test_ccd5 <- read.table('./Research2026-002 data/CCD-5 validate data.txt'
                         , header = FALSE
                         , skip = 3
@@ -211,7 +203,6 @@ test_ccd5 <- read.table('./Research2026-002 data/CCD-5 validate data.txt'
                         , fill = TRUE
                         , stringsAsFactors = FALSE
                         , fileEncoding = "UTF-8")
-
 # Define the column names
 colnames(test_ccd5) <- c("Run", "x1", "x2",  "x3", 'x4','experiment', "rsm_p",'rsm_d','ann_p','ann_d')
 
@@ -247,13 +238,11 @@ train_ccd6 <- read.table('./Research2026-002 data/CCD-6 data.txt'
                          , fill = TRUE
                          , stringsAsFactors = FALSE
                          , fileEncoding = "UTF-8")
-
 # Define the column names
 colnames(train_ccd6) <- c("Run","temp","t",'ph',"enz",'experiment','pred',"ann")
 
 #------------------
 # Validate
-#------------------
 test_ccd6 <- read.table('./Research2026-002 data/CCD-6 validate.txt'
                          , header = FALSE
                          , skip = 1
@@ -308,7 +297,6 @@ train_ccd7$x3 <- ifelse(train_ccd7$x3_l == "A", -1
 
 #------------------
 # Validate
-#------------------
 test_ccd7a <- read.table('./Research2026-002 data/CCD-7 validate part 1.txt'
                         , header = FALSE
                         , skip = 2
@@ -378,7 +366,6 @@ train_ccd8$UF <- recode(train_ccd8$UF_l,
 
 #------------------
 # Validate
-#------------------
 test_ccd8 <- read.csv('./Research2026-002 data/CCD-8test.csv')
 
 # Convert MP and  UF to Type I:-1, Type II:0, Type III:1
@@ -430,7 +417,6 @@ colnames(train_ccd9) <- c("Run","A","B",'RS',"PGI",'GL',"rsmr",'annr'
                           ,'rsmp','annp','rsmg','anng')
 #------------------
 # Validate
-#------------------
 test_ccd9 <- read.table('./Research2026-002 data/CCD-9 test.txt'
                          , header = FALSE
                          , skip = 1
@@ -469,18 +455,25 @@ results <- doe_meta_model(
 ####################################################################
 # CCD10
 ####################################################################
-train_ccd10 <- read.csv('./Research2026-002 data/CCD-10 data.txt'
-                         , header = TRUE
-                         , check.names = FALSE
-                         )
-
+train_ccd10 <- read.table('./Research2026-002 data/CCD-10 data.txt'
+                          , header = FALSE
+                          , skip = 1
+                          , sep = ""
+                          , fill = TRUE
+                          , stringsAsFactors = FALSE
+                          , fileEncoding = "UTF-8")
 # Define the column names
 colnames(train_ccd10) <- c("Run","x1","x2",'x3',"x4",'experiment',"rsm",'ann')
 
 #------------------
 # Validate
-#------------------
-test_ccd10 <- read.csv('./Research2026-002 data/CCD-10 test.txt')
+test_ccd10 <- read.table('./Research2026-002 data/CCD-10 test.txt'
+                         , header = FALSE
+                         , skip = 1
+                         , sep = ""
+                         , fill = TRUE
+                         , stringsAsFactors = FALSE
+                         , fileEncoding = "UTF-8")
 
 # Define the column names
 colnames(test_ccd10) <- c("Run","x1","x2",'x3',"x4",'experiment')
@@ -489,7 +482,7 @@ colnames(test_ccd10) <- c("Run","x1","x2",'x3',"x4",'experiment')
 # Ensemble modeling for CCD10
 train_data <- train_ccd10
 test_data <- test_ccd10
-
+  
 responses <- 'experiment'
 predictors <- c("x1","x2",'x3',"x4")
 
@@ -508,7 +501,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD11 train coded, test could be
+# CCD11 train coded, test could be (text pg120(4))
 ####################################################################
 ccd11 <- read.csv('./Research2026-002 data/CCD-11 data.txt', header = TRUE)
 
@@ -541,7 +534,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD12
+# CCD12 text-pg128(132)
 ####################################################################
 ccd12 <- read.csv('./Research2026-002 data/CCD-12 data.csv')
 
@@ -575,7 +568,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD13 train coded, test not coded
+# CCD13 train coded, test not coded text -pg133(137)
 ####################################################################
 ccd13 <- read.csv('./Research2026-002 data/CCD-13 data.csv')
 
@@ -598,11 +591,11 @@ rsm_formulas <- list(
   SVI = SVI ~ SO(x1, x2, x3)
 )
 
-# MUST supply factor_ranges — the original natural-unit bounds.
+# MUST supply factor_ranges — the factorial ±1 bounds (not axial ±2).
 factor_ranges <- list(
-  x1 = c(0, 2000),
-  x2 = c(0, 32),
-  x3 = c(2, 10)
+  x1 = c(500, 1500),
+  x2 = c(8, 24),
+  x3 = c(4, 8)
 )
 
 results <- doe_meta_model(
@@ -617,7 +610,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD14
+# CCD14 text -pg142(146)
 ####################################################################
 ccd14 <- read.csv('./Research2026-002 data/CCD-14 data.txt'
                   , header = FALSE
@@ -659,18 +652,9 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD15
+# CCD15 text -pg153(157)
 ####################################################################
-ccd15 <- read.csv('./Research2026-002 data/CCD-15 data.txt'
-                  , header = FALSE
-                  , skip = 1
-                  , sep = ""
-                  , fill = TRUE
-                  , stringsAsFactors = FALSE
-                  , fileEncoding = "UTF-8")
-
-# Define the column names
-colnames(ccd15) <- c('stdno',"Run","A","B",'C','surf',"tang")
+ccd15 <- read.table('./Research2026-002 data/CCD-15 data.txt', header = TRUE)
 
 #------------------
 # Validate
@@ -687,7 +671,7 @@ predictors <- c('A', 'B', 'C')
 
 rsm_formulas <- list(
   surf = surf ~ FO(B) + I(C^2) + B:C,
-  tang = tang ~ FO(A, B, C) + I(C^2) + TWI(B,C)
+  tang = tang ~ FO(A, B, C) + I(C^2) + B:C
 )
 
 results <- doe_meta_model(
@@ -742,7 +726,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD17 Already coded, no test set given
+# CCD17 Also BBD15, TAG3 Already coded, no test set given
 ####################################################################
 ccd17 <- read.table('./Research2026-002 data/CCD-17 data.txt'
                   , header = FALSE
@@ -770,7 +754,7 @@ responses <- 'y'
 predictors <- c("x1","x2",'x3',"x4")
 
 rsm_formulas <- list(
-  y = y ~ FO(x1,x2,x3,x4) + I(x1^2) + I(x2^2) + I(x3^2) + I(x4^2) + TWI(x3,x4)
+  y = y ~ FO(x1,x2,x3,x4) + I(x1^2) + I(x2^2) + I(x3^2) + I(x4^2) + x3:x4
 )
 
 results <- doe_meta_model(
@@ -786,13 +770,7 @@ results <- doe_meta_model(
 ####################################################################
 # CCD18 Also TAG5
 ####################################################################
-ccd18 <- read.table('./Research2026-002 data/CCD-18 data.txt'
-                  , header = TRUE
-                  , skip = 0
-                  , sep = ""
-                  , fill = TRUE
-                  , stringsAsFactors = FALSE
-                  , fileEncoding = "UTF-8")
+ccd18 <- read.table('./Research2026-002 data/CCD-18 data.txt', header = TRUE)
 
 #------------------
 # Validate
@@ -835,7 +813,7 @@ results <- doe_meta_model(
 ccd19 <- read.table('./Research2026-002 data/CCD-19 data.txt', header = TRUE)
 
 #------------------
-# Train and test split
+# Validate
 train_ccd19 <- ccd19[1:30, , drop = FALSE]
 test_ccd19 <- ccd19[31:33, , drop = FALSE]
 
@@ -856,7 +834,7 @@ factor_ranges <- list(
   A = c(1, 5),
   B = c(10, 30),
   C = c(40, 200),
-  D = c(60, 300)
+  D = c(1, 5)
 )
 
 results <- doe_meta_model(
@@ -873,19 +851,12 @@ results <- doe_meta_model(
 ####################################################################
 # CCD20
 ####################################################################
-ccd20 <- read.table('./Research2026-002 data/CCD-20 data.txt'
-                  , header = TRUE
-                  , skip = 0
-                  , sep = ""
-                  , fill = TRUE
-                  , stringsAsFactors = FALSE
-                  , fileEncoding = "UTF-8")
+ccd20 <- read.table('./Research2026-002 data/CCD-20 data.txt', header = TRUE)
 
 #------------------
 # Validate
-#------------------
 train_ccd20 <- ccd20[1:20, , drop = FALSE]
-test_ccd20 <- ccd20[21:21, , drop = FALSE]
+test_ccd20 <- ccd20[21, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for CCD20
@@ -896,7 +867,7 @@ responses <- "wear"
 predictors <- c("Load","speed",'distance')
 
 rsm_formulas <- list(
-  wear = wear ~ FO(Load,speed,distance) + I(Load^2) + I(speed^2) + TWI(distance,Load) + TWI(speed,distance)
+  wear = wear ~ FO(Load,speed,distance) + I(Load^2) + I(speed^2) + distance:Load + speed:distance
 )
 
 results <- doe_meta_model(
@@ -910,12 +881,12 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD21 train coded, test not coded
+# CCD21 Also TAG14. train coded, test not coded
 ####################################################################
 ccd21 <- read.table('./Research2026-002 data/CCD-21 data.txt', header = TRUE)
+
 #------------------
 # Validate
-#------------------
 test_ccd21 <- read.table('./Research2026-002 data/CCD-21 test.txt', header = TRUE)
 
 #----------------------------------
@@ -957,7 +928,6 @@ ccd22 <- read.table('./Research2026-002 data/CCD-22 data.txt', header = TRUE)
 
 #------------------
 # Validate
-#------------------
 train_ccd22 <- ccd22[1:22, , drop = FALSE]
 test_ccd22 <- ccd22[23:24, , drop = FALSE]
 
@@ -970,8 +940,15 @@ responses <- c('HRY', 'BR')
 predictors <- c("steam","dryer","temp")
 
 rsm_formulas <- list(
-  HRY = HRY ~ FO(steam,dryer,temp) + TWI(steam,dryer) + TWI(dryer,temp) + I(steam^2),
-  BR = BR ~ FO(steam,dryer,temp) + TWI(steam,dryer) + TWI(dryer,temp) + I(steam^2)
+  HRY = HRY ~ FO(steam,dryer,temp) + steam:dryer + dryer:temp + I(steam^2),
+  BR = BR ~ FO(steam,dryer,temp) + steam:dryer + dryer:temp + I(steam^2)
+)
+
+# Factorial ±1 bounds (not axial). Axial steam=0,15 so factorial=5,10.
+factor_ranges <- list(
+  steam = c(5, 10),
+  dryer = c(1, 2),
+  temp  = c(35, 45)
 )
 
 results <- doe_meta_model(
@@ -981,6 +958,7 @@ results <- doe_meta_model(
   predictors = predictors,
   rsm_formulas = rsm_formulas,
   design_type = "CCD",
+  factor_ranges = factor_ranges,
   excel_file="Metrics.xlsx"
 )
 
@@ -991,7 +969,6 @@ ccd23 <- read.table('./Research2026-002 data/CCD-23 data.txt', header = TRUE)
 
 #------------------
 # Validate
-#------------------
 train_ccd23 <- ccd23[1:27, , drop = FALSE]
 test_ccd23 <- ccd23[28:33, , drop = FALSE]
 
@@ -1039,11 +1016,11 @@ rsm_formulas <- list(
   y = y ~ FO(x3, x7, x8) + x3:x7 + x3:x8 + I(x7^2) + I(x8^2)
 )
 
-# MUST supply factor_ranges — the original natural-unit bounds.
+# MUST supply factor_ranges — the factorial ±1 bounds (same paper as DSD1).
 factor_ranges <- list(
-  x3 = c(39.55, 140.45),
-  x7 = c(65.91, 234.09),
-  x8 = c(0.45, 10.54)
+  x3 = c(60, 120),
+  x7 = c(100, 500),
+  x8 = c(2, 8)
 )
 
 results <- doe_meta_model(
@@ -1060,4 +1037,4 @@ results <- doe_meta_model(
 #--------------------------------------------------------------------
 # Optional: Clean up H2O logs that are more than 7 days old. 
 # Set dry_run = FALSE to actually delete the files.
-cleanup_h2o_logs(max_age_days = 7, dry_run = FALSE)  # Set to FALSE to delete files
+cleanup_h2o_logs(max_age_days = 7, dry_run = FALSE)

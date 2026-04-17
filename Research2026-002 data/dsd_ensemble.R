@@ -64,7 +64,6 @@ train_dsd2 <- read.table('./Research2026-002 data/DSD-2 data.txt', header = TRUE
 
 #---------------------------
 # Validate
-#---------------------------
 test_dsd2 <- read.table('./Research2026-002 data/DSD-2 test.txt', header = TRUE)
 
 #---------------------------
@@ -157,7 +156,6 @@ test_data <- test_dsd4[1:12,,drop = FALSE]
 test_datap <- test_dsd4[c(1,13:17),,drop = FALSE]
 
 responses <- c("ErP")
-# responsesb <- c("ErA")
 predictors <- c('Tcrys','poxy','TDew','Dwell','Heating','Rotation')
 
 rsm_formulas <- list(

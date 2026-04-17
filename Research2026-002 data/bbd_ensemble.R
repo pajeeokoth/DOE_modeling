@@ -51,7 +51,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# BBD2 Optional
+# BBD2 Optional Also PBD1
 ####################################################################
 bbd2 <- read.table('./Research2026-002 data/BBD-2 data.txt'
                    , header = TRUE
@@ -94,19 +94,13 @@ results <- doe_meta_model(
 ####################################################################
 # BBD3 Optional
 ####################################################################
-bbd3 <- read.table('./Research2026-002 data/BBD-3 data.txt'
-                   , header = TRUE
-                   , skip = 0
-                   , sep = ""
-                   , fill = TRUE
-                   , stringsAsFactors = FALSE
-                   , fileEncoding = "UTF-8")
+bbd3 <- read.table('./Research2026-002 data/BBD-3 data.txt', header = TRUE)
 
 #---------------------------
 # Validate
 bbd3 <- as.data.frame(bbd3)
-train_bbd3 <- sample(bbd3[1:17,])
-test_bbd3 <- bbd3[sample(18:18),]
+train_bbd3 <- bbd3[1:17,, drop = FALSE]
+test_bbd3 <- bbd3[18,, drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for BBD3
@@ -133,19 +127,13 @@ results <- doe_meta_model(
 ####################################################################
 # BBD4
 ####################################################################
-bbd4 <- read.table('./Research2026-002 data/BBD-4 data.txt'
-                         , header = TRUE
-                         , skip = 0
-                         , sep = ""
-                         , fill = TRUE
-                         , stringsAsFactors = FALSE
-                         , fileEncoding = "UTF-8")
+bbd4 <- read.table('./Research2026-002 data/BBD-4 data.txt', header = TRUE)
 
 #---------------------------
 # Validate
 bbd4 <- as.data.frame(bbd4)
-train_bbd4 <- sample(bbd4[1:15,])
-test_bbd4 <- bbd4[sample(16:17),]
+train_bbd4 <- bbd4[1:15,, drop = FALSE]
+test_bbd4 <- bbd4[16:17,, drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for BBD4
@@ -179,18 +167,12 @@ results <- doe_meta_model(
 ####################################################################
 # BBD5
 ####################################################################
-bbd5 <- read.table('./Research2026-002 data/BBD-5 data.txt'
-                    , header = TRUE
-                    , skip = 0
-                    , sep = ""
-                    , fill = TRUE
-                    , stringsAsFactors = FALSE
-                    , fileEncoding = "UTF-8")
+bbd5 <- read.table('./Research2026-002 data/BBD-5 data.txt', header = TRUE)
 
 #---------------------------
 # Validate
-train_bbd5 <- sample(bbd5[1:17,])
-test_bbd5 <- sample(bbd5[18:19,])
+train_bbd5 <- bbd5[1:17,, drop = FALSE]
+test_bbd5 <- bbd5[18:19,, drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for BBD5
@@ -217,23 +199,11 @@ results <- doe_meta_model(
 ####################################################################
 # BBD6
 ####################################################################
-train_bbd6 <- read.table('./Research2026-002 data/BBD-6 data.txt'
-                         , header = TRUE
-                         , skip = 0
-                         , sep = ""
-                         , fill = TRUE
-                         , stringsAsFactors = FALSE
-                         , fileEncoding = "UTF-8")
+train_bbd6 <- read.table('./Research2026-002 data/BBD-6 data.txt', header = TRUE)
 
 #-----------------
 # Validate
-test_bbd6 <- read.table('./Research2026-002 data/BBD-6 test.txt'
-                         , header = TRUE
-                         , skip = 0
-                         , sep = ""
-                         , fill = TRUE
-                         , stringsAsFactors = FALSE
-                         , fileEncoding = "UTF-8")
+test_bbd6 <- read.table('./Research2026-002 data/BBD-6 test.txt', header = TRUE)
 
 #----------------------------------
 # Ensemble modeling for BBD6
@@ -261,19 +231,12 @@ results <- doe_meta_model(
 ####################################################################
 # BBD7 Optional
 ####################################################################
-bbd7 <- read.table('./Research2026-002 data/BBD-7 data.txt'
-                   , header = TRUE
-                   , skip = 0
-                   , sep = ""
-                   , fill = TRUE
-                   , stringsAsFactors = FALSE
-                   , fileEncoding = "UTF-8")
+bbd7 <- read.table('./Research2026-002 data/BBD-7 data.txt', header = TRUE)
 
 #-------------------------------
 # Validate
-bbd7 <- as.data.frame(bbd7)
-train_bbd7 <- sample(bbd7[1:15,])
-test_bbd7 <- bbd7[sample(16:16),]
+  train_bbd7 <- bbd7[1:15,, drop = FALSE]
+test_bbd7 <- bbd7[16,, drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for BBD7
@@ -307,24 +270,11 @@ results <- doe_meta_model(
 ####################################################################
 # BBD8 Optional Data issue with test (limits are outside train set)
 ####################################################################
-train_bbd8 <- read.table('./Research2026-002 data/BBD-8 data.txt'
-                   , header = TRUE
-                   , skip = 0
-                   , sep = ""
-                   , fill = TRUE
-                   , stringsAsFactors = FALSE
-                   , fileEncoding = "UTF-8")
-
+train_bbd8 <- read.table('./Research2026-002 data/BBD-8 data.txt', header = TRUE)
 
 #-------------------------------
 # Validate
-test_bbd8 <- read.table('./Research2026-002 data/BBD-8 test.txt'
-                   , header = TRUE
-                   , skip = 0
-                   , sep = ""
-                   , fill = TRUE
-                   , stringsAsFactors = FALSE
-                   , fileEncoding = "UTF-8")
+test_bbd8 <- read.table('./Research2026-002 data/BBD-8 test.txt', header = TRUE)
 
 #----------------------------------
 # Ensemble modeling for BBD8
@@ -364,19 +314,12 @@ results <- doe_meta_model(
 ####################################################################
 # BBD9 No test set for response U
 ####################################################################
-bbd9 <- read.table('./Research2026-002 data/BBD-9 data.txt'
-                    , header = TRUE
-                    , skip = 0
-                    , sep = ""
-                    , fill = TRUE
-                    , stringsAsFactors = FALSE
-                    , fileEncoding = "UTF-8")
+bbd9 <- read.table('./Research2026-002 data/BBD-9 data.txt', header = TRUE)
 
 #---------------------------------
 # Validate
-bbd9 <- as.data.frame(bbd9)
-train_bbd9 <- bbd9[1:17,]
-test_bbd9 <- bbd9[18:22, ]
+train_bbd9 <- bbd9[1:17, , drop = FALSE]
+test_bbd9 <- bbd9[18:22, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for BBD9
@@ -428,8 +371,8 @@ colnames(bbd10) <- c("Run","x1","x2","x3",'y1','y2','y3','y4','y5')
 
 
 bbd10 <- as.data.frame(bbd10)
-train_bbd10 <- sample(bbd10[1:15,])
-test_bbd10 <- bbd10[sample(16:16),]
+train_bbd10 <- bbd10[1:15, , drop = FALSE]
+test_bbd10 <- bbd10[16, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for BBD10
@@ -474,8 +417,8 @@ colnames(bbd11) <- c("Run","power","irradiation", "solvent","pH","Colchicine")
 #-------------------------------
 # Validate
 bbd11 <- as.data.frame(bbd11)
-train_bbd11 <- sample(bbd11[1:21,])
-test_bbd11 <- bbd11[sample(22:27),]
+train_bbd11 <- bbd11[1:21, , drop = FALSE]
+test_bbd11 <- bbd11[22:27, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for BBD11
@@ -502,16 +445,10 @@ results <- doe_meta_model(
 ####################################################################
 # BBD12 from text-pg105
 ####################################################################
-bbd12 <- read.table('./Research2026-002 data/BBD-12 data.txt'
-                    , header = TRUE
-                    , skip = 0
-                    , sep = ""
-                    , fill = TRUE
-                    , stringsAsFactors = FALSE
-                    , fileEncoding = "UTF-8")
+bbd12 <- read.table('./Research2026-002 data/BBD-12 data.txt', header = TRUE)
+
 #------------------
 # Validate
-#------------------
 train_bbd12 <- bbd12[1:15, , drop = FALSE]
 test_bbd12 <- bbd12[16:18, , drop = FALSE]
 
@@ -546,18 +483,13 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# BBD13
+# BBD13 Also DSD5 TAG4
 ####################################################################
-train_bbd13 <- read.table('./Research2026-002 data/BBD-13 data.txt'
-                          , header = TRUE)
+train_bbd13 <- read.table('./Research2026-002 data/BBD-13 data.txt', header = TRUE)
 
-test_bbd13 <- read.table('./Research2026-002 data/BBD-13 dsd5tag4 test.txt'
-                         , header = TRUE
-                         , skip = 0
-                         , sep = ""
-                         , fill = TRUE
-                         , stringsAsFactors = FALSE
-                         , fileEncoding = "UTF-8")
+#---------------------------------
+# Validate
+test_bbd13 <- read.table('./Research2026-002 data/BBD-13 dsd5tag4 test.txt', header = TRUE)
 
 #----------------------------------
 # Ensemble modeling for BBD13
@@ -591,21 +523,14 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# BBD15 Optional no test set provided
+# BBD15 Also CCD17, TAG3 no test set provided
 ####################################################################
-bbd15 <- read.table('./Research2026-002 data/BBD-15 data.txt'
-                   , header = TRUE
-                   , skip = 0
-                   , sep = ""
-                   , fill = TRUE
-                   , stringsAsFactors = FALSE
-                   , fileEncoding = "UTF-8")
+bbd15 <- read.table('./Research2026-002 data/BBD-15 data.txt', header = TRUE)
 
 #---------------------------------
 # Validate
-bbd15 <- as.data.frame(bbd15)
-train_bbd15 <- sample(bbd15[1:22,])
-test_bbd15 <- bbd15[sample(23:27),]
+train_bbd15 <- bbd15[1:22, , drop = FALSE]
+test_bbd15 <- bbd15[23:27, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for BBD15
@@ -632,19 +557,12 @@ results <- doe_meta_model(
 ####################################################################
 # BBD16 
 ####################################################################
-bbd16 <- read.table('./Research2026-002 data/BBD-16 data.txt'
-                    , header = TRUE
-                    , skip = 0
-                    , sep = ""
-                    , fill = TRUE
-                    , stringsAsFactors = FALSE
-                    , fileEncoding = "UTF-8")
+bbd16 <- read.table('./Research2026-002 data/BBD-16 data.txt', header = TRUE)
 
 #---------------------------------
-# Train and test sets
-bbd16 <- as.data.frame(bbd16)
-train_bbd16 <- sample(bbd16[1:15,])
-test_bbd16 <- sample(bbd16[16:19,])
+# Validate
+train_bbd16 <- bbd16[1:15, , drop = FALSE]
+test_bbd16 <- bbd16[16:19, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for BBD16
@@ -675,19 +593,12 @@ results <- doe_meta_model(
 ####################################################################
 # BBD17
 ####################################################################
-bbd17 <- read.table('./Research2026-002 data/BBD-17 data.txt'
-                    , header = TRUE
-                    , skip = 0
-                    , sep = ""
-                    , fill = TRUE
-                    , stringsAsFactors = FALSE
-                    , fileEncoding = "UTF-8")
+bbd17 <- read.table('./Research2026-002 data/BBD-17 data.txt', header = TRUE)
 
 #---------------------------------
-# Train and test sets
-bbd17 <- as.data.frame(bbd17)
-train_bbd17 <- sample(bbd17[1:27,])
-test_bbd17 <- sample(bbd17[28:30,])
+# Validate
+train_bbd17 <- bbd17[1:27, , drop = FALSE]
+test_bbd17 <- bbd17[28:30, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for BBD17
@@ -714,17 +625,10 @@ results <- doe_meta_model(
 ####################################################################
 # BBD18
 ####################################################################
-bbd18 <- read.table('./Research2026-002 data/BBD-18 data.txt'
-                    , header = TRUE
-                    , skip = 0
-                    , sep = ""
-                    , fill = TRUE
-                    , stringsAsFactors = FALSE
-                    , fileEncoding = "UTF-8")
+bbd18 <- read.table('./Research2026-002 data/BBD-18 data.txt', header = TRUE)
 
 #---------------------------------
-# Train and test sets
-bbd18 <- as.data.frame(bbd18)
+# Validate
 train_bbd18 <- bbd18[1:27, , drop = FALSE]
 test_bbd18 <- bbd18[28,, drop = FALSE]
 
@@ -752,19 +656,12 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# BBD19
+# BBD19 Also TAG15
 ####################################################################
-bbd19 <- read.table('./Research2026-002 data/BBD-19 data.txt'
-                    , header = TRUE
-                    , skip = 0
-                    , sep = ""
-                    , fill = TRUE
-                    , stringsAsFactors = FALSE
-                    , fileEncoding = "UTF-8")
+bbd19 <- read.table('./Research2026-002 data/BBD-19 data.txt', header = TRUE)
 
 #---------------------------------
-# Train and test sets
-bbd19 <- as.data.frame(bbd19)
+# Validate
 train_bbd19 <- bbd19[1:27, , drop = FALSE]
 test_bbd19 <- bbd19[28,, drop = FALSE]
 
