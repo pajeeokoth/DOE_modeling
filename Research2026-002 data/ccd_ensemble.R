@@ -652,7 +652,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# CCD15 text -pg153(157)
+# CCD15 text -pg153(157) RSM has no A
 ####################################################################
 ccd15 <- read.table('./Research2026-002 data/CCD-15 data.txt', header = TRUE)
 
@@ -784,23 +784,23 @@ train_data <- train_ccd18
 test_data <- test_ccd18
 test_data_b <- test_ccd18b
 
-responses <- c("COD","Decol")
+# responses <- c("COD","Decol")
 predictors <- c("Dye","DyeFe","H2O2Fe","pH")
 
-results <- doe_meta_model(
-  train_data = train_data,
-  test_data = test_data,
-  responses = responses,
-  predictors = predictors,
-  rsm_formulas = list(COD   = COD ~ SO(Dye,DyeFe,H2O2Fe,pH)),
-  design_type = "CCD",
-  excel_file="Metrics.xlsx"
-)
+# results <- doe_meta_model(
+#   train_data = train_data,
+#   test_data = test_data,
+#   responses = "COD",
+#   predictors = predictors,
+#   rsm_formulas = list(COD   = COD ~ SO(Dye,DyeFe,H2O2Fe,pH)),
+#   design_type = "CCD",
+#   excel_file="Metrics.xlsx"
+# )
 
 results <- doe_meta_model(
   train_data = train_data,
   test_data = test_data_b,
-  responses = responses,
+  responses = "Decol",
   predictors = predictors,
   rsm_formulas = list(Decol = Decol ~ SO(Dye,DyeFe,H2O2Fe,pH)),
   design_type = "CCD",

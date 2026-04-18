@@ -141,7 +141,7 @@ results <- doe_meta_model(
 ####################################################################
 # DSD4
 ####################################################################
-dsd4 <- read.csv('./Research2026-002 data/DSD-4 data.csv')
+dsd4 <- read.csv('./Research2026-002 data/DSD-4 data.csv', header = TRUE)
 
 #---------------------------------
 # Train and test sets
@@ -155,8 +155,8 @@ train_data <- train_dsd4
 test_data <- test_dsd4[1:12,,drop = FALSE]
 test_datap <- test_dsd4[c(1,13:17),,drop = FALSE]
 
-responses <- c("ErP")
-predictors <- c('Tcrys','poxy','TDew','Dwell','Heating','Rotation')
+# responses <- c("ErP")
+# predictors <- c('Tcrys','poxy','TDew')#,'Dwell','Heating','Rotation')
 
 rsm_formulas <- list(
   ErP = ErP ~ FO(Tcrys, poxy, TDew) + I(poxy^2)
@@ -167,17 +167,18 @@ rsm_formulasp <- list(
 results <- doe_meta_model(
   train_data = train_data,
   test_data = test_data,
-  responses = responses,
-  predictors = predictors,
+  responses = c("ErP"),
+  predictors = c('Tcrys','poxy','TDew'),
   rsm_formulas = rsm_formulas,
   design_type = "DSD",
   excel_file="Metrics.xlsx"
 )
+
 results <- doe_meta_model(
   train_data = train_data,
   test_data = test_datap,
   responses = c("ErA"),
-  predictors = predictors,
+  predictors = c('Tcrys', 'TDew'),
   rsm_formulas = rsm_formulasp,
   design_type = "DSD",
   excel_file="Metrics.xlsx"

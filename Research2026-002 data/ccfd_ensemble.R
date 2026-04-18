@@ -27,7 +27,7 @@ train_ccrd1 <- read.table('./Research2026-002 data/CCRD-1 data.txt', header = TR
 test_ccrd1 <- read.table('./Research2026-002 data/CCRD-1 test.txt', header = TRUE)
 
 #----------------------------------
-# Ensemble modeling for ccrd1
+# Ensemble modeling for CCRD1
 train_data <- train_ccrd1
 test_data <- test_ccrd1
 
@@ -58,7 +58,7 @@ train_ccfd1 <- read.table('./Research2026-002 data/CCFD-1 data.txt', header = TR
 test_ccfd1 <- read.table('./Research2026-002 data/CCFD-1 validate.txt', header = TRUE)
 
 #----------------------------------
-# Ensemble modeling for ccfd1
+# Ensemble modeling for CCFD1
 train_data <- train_ccfd1
 test_data <- test_ccfd1
 
@@ -145,7 +145,7 @@ train_ffd1 <- ffd1[1:16, , drop = FALSE]
 test_ffd1 <- ffd1[17:24, , drop = FALSE]
 
 #----------------------------------
-# Ensemble modeling for ffd1
+# Ensemble modeling for FFD1
 train_data <- train_ffd1
 test_data <- test_ffd1
 
@@ -178,9 +178,9 @@ train_ffd2 <- ffd2[1:16, , drop = FALSE]
 test_ffd2 <- ffd2[17:24, , drop = FALSE]
 
 #----------------------------------
-# Ensemble modeling for ffd1
-train_data <- train_ffd1
-test_data <- test_ffd1
+# Ensemble modeling for FFD2
+train_data <- train_ffd2
+test_data <- test_ffd2
 
 responses <- c("Ra")
 predictors <- c('vc', 'f','alpha')
@@ -213,7 +213,7 @@ train_2fd1 <- tlfd1[1:20, , drop = FALSE]
 test_2fd1 <- tlfd1[21:28, , drop = FALSE]
 
 #----------------------------------
-# Ensemble modeling for 2fd1
+# Ensemble modeling for 2FLD1
 train_data <- train_2fd1
 test_data <- test_2fd1
 
@@ -237,7 +237,7 @@ results <- doe_meta_model(
 ####################################################################
 # 2FD2 (Two-Level Factorial Design)
 ####################################################################
-tlfd2 <- read.csv('./Research2026-002 data/2FD-2 data.txt', header = TRUE)
+tlfd2 <- read.table('./Research2026-002 data/2FD-2 data.txt', header = TRUE)
 
 #--------------------------
 # Validate
@@ -245,7 +245,7 @@ train_2fd2 <- tlfd2[1:13, , drop = FALSE]
 test_2fd2 <- tlfd2[14, , drop = FALSE]
 
 #----------------------------------
-# Ensemble modeling for 2fd2
+# Ensemble modeling for 2LFD2
 train_data <- train_2fd2
 test_data <- test_2fd2
 
@@ -270,23 +270,30 @@ results <- doe_meta_model(
 ####################################################################
 # 3FD1 (Three-Level Factorial Design)
 ####################################################################
-tlfd1 <- read.table('./Research2026-002 data/3FD-1 data.txt', header = TRUE)
+tlfd3 <- read.table('./Research2026-002 data/3FD-1 data.txt', header = TRUE)
 
 #--------------------------
-# Validate
-train_fd1 <- fd1[1:13, , drop = FALSE]
-test_fd1 <- fd1[14:22, , drop = FALSE]
+# Rows 15,16,18,19,20,21 have non-standard coded levels (-0.333, 0.333, 0.4, 0.34)
+# Put them in train so both sets pass is_already_coded() with {-1, 0, 1} in test
+train_fd3 <- tlfd3[c(1:13, 15, 16, 18, 19, 20, 21), , drop = FALSE]
+test_fd3  <- tlfd3[c(14, 17), , drop = FALSE]
 
 #----------------------------------
-# Ensemble modeling for ccfd1
-train_data <- train_fd1
-test_data <- test_fd1
+# Ensemble modeling for 3LFD3
+train_data <- train_fd3
+test_data <- test_fd3
 
 responses <- c("yield")
 predictors <- c('x1', 'x2','x3')
  
 rsm_formulas <- list(
   yield = yield ~ FO(x1,x2, x3) + I(x1^2) + I(x3^2) + x1:x3
+)
+
+factor_ranges <- list(
+  x1 = c(3.6, 4.8),
+  x2 = c(30, 40),
+  x3 = c(0 , 1)
 )
 
 results <- doe_meta_model(
@@ -296,13 +303,14 @@ results <- doe_meta_model(
   predictors = predictors,
   rsm_formulas = rsm_formulas,
   design_type = "3LFD",
+  factor_ranges = factor_ranges,
   excel_file="Metrics.xlsx"
 )
 
 ####################################################################
 # FCCD2 (CCD Full Factorial Face Centered)
 ####################################################################
-fffcd2 <- read.table('./Research2026-002 data/FCCD-2 data.txt', header = TRUE)
+fffcd2 <- read.table('./Research2026-002 data/FCCD-2 data.txt', header = TRUE, sep = ",")
 
 #--------------------------
 # Validate
@@ -310,7 +318,7 @@ train_fffcd2 <- fffcd2[1:27, , drop = FALSE]
 test_fffcd2 <- fffcd2[28, , drop = FALSE]
 
 #----------------------------------
-# Ensemble modeling for fccd2
+# Ensemble modeling for FCCD2
 train_data <- train_fffcd2
 test_data <- test_fffcd2
 
@@ -334,15 +342,15 @@ results <- doe_meta_model(
 ####################################################################
 # FCCD3 (CCD Full Factorial Face Centered)
 ####################################################################
-fffcd3 <- read.table('./Research2026-002 data/FCCD-3 data.txt', header = TRUE)
+fffcd3 <- read.table('./Research2026-002 data/FCCD-3 data.txt', header = TRUE, sep = ",")
 
 #--------------------------
 # Validate
 train_fffcd3 <- fffcd3[1:30, , drop = FALSE]
-test_fffcd3 <- fffcd3[31:34, , drop = FALSE]
+test_fffcd3 <- fffcd3[31:33, , drop = FALSE]
 
 #----------------------------------
-# Ensemble modeling for fccd3
+# Ensemble modeling for FCCD3
 train_data <- train_fffcd3
 test_data <- test_fffcd3
 
@@ -367,7 +375,7 @@ results <- doe_meta_model(
 ####################################################################
 # FCCD4 (CCD Full Factorial Face Centered)
 ####################################################################
-fffcd4 <- read.table('./Research2026-002 data/FCCD-4 data.txt', header = TRUE)
+fffcd4 <- read.table('./Research2026-002 data/FCCD-4 data.txt', header = TRUE, sep = ",")
 
 #--------------------------
 # Validate
@@ -375,7 +383,7 @@ train_fffcd4 <- fffcd4[1:20, , drop = FALSE]
 test_fffcd4 <- fffcd4[21:22, , drop = FALSE]
 
 #----------------------------------
-# Ensemble modeling for fccd4
+# Ensemble modeling for FCCD4
 train_data <- train_fffcd4
 test_data <- test_fffcd4
 
@@ -449,18 +457,18 @@ test_pbd2 <- pbd2[13:14, , drop = FALSE]
 train_data <- train_pbd2
 test_data <- test_pbd2
 
-responses <- c("y1", "y2", "y3", "y4")
-predictors <- c("x1", "x2", "x4", "x5", "x6", "x7", "x8", "x9", "x11")
+responses <- c("Y1", "Y2", "Y3", "Y4")
+predictors <- c("X1", "X2", "X4", "X5", "X6", "X7", "X8", "X9", "X11")
 
 rsm_formulas <- list(
-  y1 = y1 ~ FO(x1, x2, x4, x5, x6, x7, x8, x9, x11),
-  y2 = y2 ~ FO(x1, x2, x4, x5, x6, x7, x8, x9, x11),
-  y3 = y3 ~ FO(x1, x2, x4, x5, x6, x7, x8, x9, x11),
-  y4 = y4 ~ FO(x1, x2, x4, x5, x6, x7, x8, x9, x11)
+  Y1 = Y1 ~ FO(X1, X2, X4, X5, X6, X7, X8, X9, X11),
+  Y2 = Y2 ~ FO(X1, X2, X4, X5, X6, X7, X8, X9, X11),
+  Y3 = Y3 ~ FO(X1, X2, X4, X5, X6, X7, X8, X9, X11),
+  Y4 = Y4 ~ FO(X1, X2, X4, X5, X6, X7, X8, X9, X11)
 )
 
 results <- doe_meta_model(
-  train_data = train_data,+
+  train_data = train_data,
   test_data = test_data,
   responses = responses,
   predictors = predictors,
@@ -483,7 +491,7 @@ test_pbd3 <- read.table('./Research2026-002 data/BBD-8 test.txt', header = TRUE)
 
 #----------------------------------
 # Ensemble modeling for PBD3
-train_data <- train_pbd3
+train_data <- pbd3
 test_data <- test_pbd3
 
 responses <- c("Y2","Y5","Y6")
