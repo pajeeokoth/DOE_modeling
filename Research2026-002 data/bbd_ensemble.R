@@ -268,7 +268,7 @@ results <- doe_meta_model(
 )
 
 ####################################################################
-# BBD8 Optional Data issue with test (limits are outside train set)
+# BBD8 Optional Data issue with test (limits are outside train set) Also PBD3
 ####################################################################
 train_bbd8 <- read.table('./Research2026-002 data/BBD-8 data.txt', header = TRUE)
 

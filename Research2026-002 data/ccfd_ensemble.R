@@ -49,6 +49,70 @@ results <- doe_meta_model(
 )
 
 ####################################################################
+# CCRD2 added 4/30/26 paper_CCRD2
+####################################################################
+ccrd2 <- read.table('./Research2026-002 data/CCRD-2 data.txt', header = TRUE)
+
+#---------------------------
+# Validate
+train_ccrd2 <- ccrd2[1:30, , drop = FALSE]
+test_ccrd2 <- ccrd2[31:46, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for CCRD2
+train_data <- train_ccrd2
+test_data <- test_ccrd2
+
+responses <- c("Experimental")
+predictors <- c('Sucrose', 'YeastExtract', 'K2HPO4', 'MgSO4')
+ 
+rsm_formulas <- list(
+  Experimental = Experimental ~ SO(Sucrose, YeastExtract, K2HPO4, MgSO4)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "CCRD",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# CCRD3 added 4/30/26 paper4_CCRD
+####################################################################
+ccrd3 <- read.table('./Research2026-002 data/CCRD-3 data.txt', header = TRUE)
+
+#---------------------------
+# Validate
+train_ccrd3 <- ccrd3[1:27, , drop = FALSE]
+test_ccrd3 <- ccrd3[28:31, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for CCRD3
+train_data <- train_ccrd3
+test_data <- test_ccrd3
+
+responses <- c("CGA")
+predictors <- c("X1", "X2", "X3", "X4")
+ 
+rsm_formulas <- list(
+  CGA = CGA ~ SO(X1, X2, X3, X4)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "CCRD",
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
 # CCFD1
 ####################################################################
 train_ccfd1 <- read.table('./Research2026-002 data/CCFD-1 data.txt', header = TRUE)
@@ -270,18 +334,18 @@ results <- doe_meta_model(
 ####################################################################
 # 3FD1 (Three-Level Factorial Design)
 ####################################################################
-tlfd3 <- read.table('./Research2026-002 data/3FD-1 data.txt', header = TRUE)
+tl_fd1 <- read.table('./Research2026-002 data/3FD-1 data.txt', header = TRUE)
 
 #--------------------------
 # Rows 15,16,18,19,20,21 have non-standard coded levels (-0.333, 0.333, 0.4, 0.34)
 # Put them in train so both sets pass is_already_coded() with {-1, 0, 1} in test
-train_fd3 <- tlfd3[c(1:13, 15, 16, 18, 19, 20, 21), , drop = FALSE]
-test_fd3  <- tlfd3[c(14, 17), , drop = FALSE]
+train_3fd1 <- tl_fd1[c(1:13, 15, 16, 18, 19, 20, 21), , drop = FALSE]
+test_3fd1  <- tl_fd1[c(14, 17), , drop = FALSE]
 
 #----------------------------------
-# Ensemble modeling for 3LFD3
-train_data <- train_fd3
-test_data <- test_fd3
+# Ensemble modeling for 3LFD1
+train_data <- train_3fd1
+test_data <- test_3fd1
 
 responses <- c("yield")
 predictors <- c('x1', 'x2','x3')
@@ -304,6 +368,93 @@ results <- doe_meta_model(
   rsm_formulas = rsm_formulas,
   design_type = "3LFD",
   factor_ranges = factor_ranges,
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# 3FD2 (Three-Level Factorial Design) 3levelc-consider
+####################################################################
+tl_fd2 <- read.table('./Research2026-002 data/3FD-2 data.txt', header = TRUE)
+
+#---------------------------
+# Convert tool to CC650:-1,CC650WG:0,CC6050WH:1
+tl_fd2$too <- ifelse(tl_fd2$Tool == "CC650", -1
+                       , ifelse(tl_fd2$Tool == "CC650WG", 0, 1))
+
+#--------------------------
+# Validate
+train_3fd2 <- tl_fd2[1:54, , drop = FALSE]
+test_3fd2  <- tl_fd2[55:81, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for 3LFD2
+train_data <- train_3fd2
+test_data <- test_3fd2
+
+responses <- c("Ks", "Ra", "VC")
+predictors <- c("too","v","f","t")
+ 
+rsm_formulas <- list(
+  Ks = Ks ~ FO(too,v, f, t) + I(too^2) + I(f^2) + too:f,
+  Ra = Ra ~ FO(too,v, f, t) + I(too^2) + I(f^2) + too:f,
+  VC = VC ~ FO(too,v, f, t) + I(too^2) + I(f^2) + too:f
+)
+
+factor_ranges <- list(
+  v = c(80, 150),
+  f = c(0.05, 0.15),
+  t = c(5 , 15)
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "3LFD",
+  factor_ranges = factor_ranges,
+  excel_file="Metrics.xlsx"
+)
+
+####################################################################
+# 4FD1 (Four-Level Factorial Design) 4levela-consider
+####################################################################
+fl_fd1 <- read.table('./Research2026-002 data/4FD-1 data.txt', header = TRUE)
+
+#---------------------------
+# Convert Material to C-60:-1, 17CrNiMo6:0, 42CrMo4:1
+# Convert Environment to Dry:0, HPC:1
+# Convert Insert to SNMG:0,SNMM:1
+fl_fd1$D <- ifelse(fl_fd1$Material == "C-60", -1
+                       , ifelse(fl_fd1$Material == "17CrNiMo6", 0, 1))  
+fl_fd1$C <- ifelse(fl_fd1$Env == "Dry", 0, 1)
+fl_fd1$E <- ifelse(fl_fd1$Insert == "SNMG", 0, 1)
+
+#--------------------------
+# Validate
+train_4fd1 <- fl_fd1[1:154, , drop = FALSE]
+test_4fd1  <- fl_fd1[155:192, , drop = FALSE]
+
+#----------------------------------
+# Ensemble modeling for 4LFD1
+train_data <- train_4fd1
+test_data <- test_4fd1
+
+responses <- c("Response")
+predictors <- c("A", "B", "C", "D", "E")
+ 
+rsm_formulas <- list(
+  Response = Response ~ FO(A, B, C, D, E) + I(A^2) + I(B^2) + A:B + A:C + A:D + A:E + B:C + B:D + B:E + C:D + C:E + D:E + I(A^2)*B + I(A^2)*C + I(A^2)*D + I(A^2)*E + A:I(B^2) + I(B^2)*C + I(B^2)*D + I(B^2)*E + A:B:C + A:B:D + A:B:E + A:C:D + A:C:E + A:D:E + B:C:D + B:C:E + B:D:E + C:D:E + I(A^3) + I(B^3) 
+)
+
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = responses,
+  predictors = predictors,
+  rsm_formulas = rsm_formulas,
+  design_type = "4LFD",
   excel_file="Metrics.xlsx"
 )
 

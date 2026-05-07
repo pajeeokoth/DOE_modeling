@@ -787,15 +787,15 @@ test_data_b <- test_ccd18b
 # responses <- c("COD","Decol")
 predictors <- c("Dye","DyeFe","H2O2Fe","pH")
 
-# results <- doe_meta_model(
-#   train_data = train_data,
-#   test_data = test_data,
-#   responses = "COD",
-#   predictors = predictors,
-#   rsm_formulas = list(COD   = COD ~ SO(Dye,DyeFe,H2O2Fe,pH)),
-#   design_type = "CCD",
-#   excel_file="Metrics.xlsx"
-# )
+results <- doe_meta_model(
+  train_data = train_data,
+  test_data = test_data,
+  responses = "COD",
+  predictors = predictors,
+  rsm_formulas = list(COD = COD ~ SO(Dye,DyeFe,H2O2Fe,pH)),
+  design_type = "CCD",
+  excel_file="Metrics.xlsx"
+)
 
 results <- doe_meta_model(
   train_data = train_data,
@@ -1010,18 +1010,23 @@ train_data <- train_ccd24
 test_data <- test_ccd24
 
 responses <- c("y")
-predictors <- c("x3", 'x7', 'x8')
+predictors <- c("x1", 'x2', 'x3')
  
 rsm_formulas <- list(
-  y = y ~ FO(x3, x7, x8) + x3:x7 + x3:x8 + I(x7^2) + I(x8^2)
+  y = y ~ FO(x1, x2, x3) + I(x3^2)
 )
 
 # MUST supply factor_ranges — the factorial ±1 bounds (same paper as DSD1).
 factor_ranges <- list(
-  x3 = c(60, 120),
-  x7 = c(100, 500),
-  x8 = c(2, 8)
+  x1 = c(60, 120),
+  x2 = c(100, 200),
+  x3 = c(2.5, 8.5)
 )
+# factor_ranges <- list(
+#   x3 = c(60, 120),
+#   x7 = c(100, 500),
+#   x8 = c(2, 8)
+# )
 
 results <- doe_meta_model(
   train_data = train_data,
