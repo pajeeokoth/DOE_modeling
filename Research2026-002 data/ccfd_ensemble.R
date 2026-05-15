@@ -421,6 +421,9 @@ results <- doe_meta_model(
 # 4FD1 (Four-Level Factorial Design) 4levela-consider
 ####################################################################
 fl_fd1 <- read.table('./Research2026-002 data/4FD-1 data.txt', header = TRUE)
+# Assign new column names for the factors
+names(fl_fd1)[names(fl_fd1) == "CuttingSpeed"] <- "A"
+names(fl_fd1)[names(fl_fd1) == "FeedRate"] <- "B"
 
 #---------------------------
 # Convert Material to C-60:-1, 17CrNiMo6:0, 42CrMo4:1
@@ -638,19 +641,20 @@ pbd3 <- read.table('./Research2026-002 data/PBD-3 data.txt', header = TRUE)
 
 #-------------------------------
 # Validate
-test_pbd3 <- read.table('./Research2026-002 data/BBD-8 test.txt', header = TRUE)
+test_pbd3 <- read.table('./Research2026-002 data/BBD-8 data.txt', header = TRUE)
+test_pbd3 <- test_pbd3[16:26, , drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for PBD3
 train_data <- pbd3
 test_data <- test_pbd3
 
-responses <- c("Y2","Y5","Y6")
+responses <- c("Y2","Y6")
 predictors <- c("A", "C",  "D")
 
 rsm_formulas <- list(
   Y2 = Y2 ~ FO(A, C, D),
-  Y5 = Y5 ~ FO(A, C, D),
+  # Y5 = Y5 ~ FO(A, C, D),
   Y6 = Y6 ~ FO(A, C, D)
 )
 

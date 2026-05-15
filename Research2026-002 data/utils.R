@@ -1,6 +1,12 @@
 ############################################################
 # 1. ONE Function to Code/Standardize data for RSM + GP + DL Models
 ############################################################
+#-------------------------------------------------------------------------------------------------------------
+#  Define the path to save the workbook and create a save function to handle potential issues with openxlsx's
+#  temporary directory. This function will attempt to set a writable temporary directory for openxlsx, 
+#  prioritizing a preferred directory if provided, and falling back to system temp directories or a 
+#  local .openxlsx_tmp folder. It will then save the workbook using this safe temporary directory.
+#-------------------------------------------------------------------------------------------------------------
 
 ensure_openxlsx_tempdir <- function(preferred_dir = NULL) {
   candidates <- unique(c(
@@ -837,9 +843,9 @@ run_DOE_ANN_full <- function(data,
   }
 
   dropout_templates <- list(
-    c(0), c(0.1), c(0.2), c(0.3),
-    c(0.1, 0.1), c(0.2, 0.2), c(0.3, 0.3),
-    c(0.2, 0.1), c(0.1, 0.2)
+    c(0), c(0.1), c(0.2), c(0.3),c(0.5),
+    c(0.1, 0.1), c(0.2, 0.2), c(0.3, 0.3),c(0.5, 0.5),
+    c(0.2, 0.1), c(0.1, 0.2),c(0.2, 0.05), c(0.05, 0.2)
   )
 
   expand_dropout <- function(template, n) {
@@ -886,23 +892,23 @@ run_DOE_ANN_full <- function(data,
         suffix = "plain",
         hyper_params = list(
           hidden              = list(hid),
-          activation          = c("Rectifier", "Tanh"),
+          activation          = c("Rectifier", "Tanh", "Maxout"),
           input_dropout_ratio = c(0),
           l1 = seq(0, 1e-3, length.out = 5),
           l2 = seq(0, 1e-3, length.out = 5),
-          epochs = c(50, 100, 200, 500)
+          epochs = seq(50, 500, by = 50)
         )
       ),
       list(
         suffix = "dropout",
         hyper_params = list(
           hidden                = list(hid),
-          activation            = c("RectifierWithDropout", "TanhWithDropout"),
-          input_dropout_ratio   = seq(0, 0.3, length.out = 4),
+          activation            = c("RectifierWithDropout", "TanhWithDropout", "MaxoutWithDropout"),
+          input_dropout_ratio   = seq(0, 0.15, length.out = 4),
           hidden_dropout_ratios = dropout_candidates,
           l1 = seq(0, 1e-3, length.out = 5),
           l2 = seq(0, 1e-3, length.out = 5),
-          epochs = c(50, 100, 200, 500)
+          epochs = seq(50, 500, by = 50)
         )
       )
     )

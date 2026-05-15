@@ -458,7 +458,7 @@ results <- doe_meta_model(
 train_ccd10 <- read.table('./Research2026-002 data/CCD-10 data.txt'
                           , header = FALSE
                           , skip = 1
-                          , sep = ""
+                          , sep = ","
                           , fill = TRUE
                           , stringsAsFactors = FALSE
                           , fileEncoding = "UTF-8")
@@ -470,7 +470,7 @@ colnames(train_ccd10) <- c("Run","x1","x2",'x3',"x4",'experiment',"rsm",'ann')
 test_ccd10 <- read.table('./Research2026-002 data/CCD-10 test.txt'
                          , header = FALSE
                          , skip = 1
-                         , sep = ""
+                         , sep = ","
                          , fill = TRUE
                          , stringsAsFactors = FALSE
                          , fileEncoding = "UTF-8")
@@ -998,8 +998,8 @@ results <- doe_meta_model(
 ####################################################################
 # CCD24 Also DSD1
 ####################################################################
-train_ccd24 <- read.table('./Research2026-002 data/CCD-24 data.txt', header = TRUE)
-
+ccd24 <- read.table('./Research2026-002 data/CCD-24 data.txt', header = TRUE)
+train_ccd24 <- ccd24[1:20, , drop = FALSE]
 #------------------------
 # Validate
 test_ccd24 <- read.table('./Research2026-002 data/DSD-1 validation.txt', header = TRUE)
@@ -1010,17 +1010,17 @@ train_data <- train_ccd24
 test_data <- test_ccd24
 
 responses <- c("y")
-predictors <- c("x1", 'x2', 'x3')
+predictors <- c("x3", 'x7', 'x8')
  
 rsm_formulas <- list(
-  y = y ~ FO(x1, x2, x3) + I(x3^2)
+  y = y ~ FO(x3, x7, x8) + I(x7^2)
 )
 
 # MUST supply factor_ranges — the factorial ±1 bounds (same paper as DSD1).
 factor_ranges <- list(
-  x1 = c(60, 120),
-  x2 = c(100, 200),
-  x3 = c(2.5, 8.5)
+  x3= c(60, 120),
+  x7 = c(100, 200),
+  x8 = c(2.5, 8.5)
 )
 # factor_ranges <- list(
 #   x3 = c(60, 120),

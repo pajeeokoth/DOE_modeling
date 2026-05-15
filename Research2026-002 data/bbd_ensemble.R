@@ -21,9 +21,9 @@ source('./Research2026-002 data/utils.R')
 # BBD1
 ####################################################################
 train_bbd1 <- read.table('./Research2026-002 data/BBD-1 data.txt', header = TRUE)
+
 #---------------------------
 # Validate
-#---------------------------
 test_bbd1  <- read.table('./Research2026-002 data/BBD-1 test.txt', header = TRUE)
 
 #----------------------------------
@@ -63,10 +63,8 @@ bbd2 <- read.table('./Research2026-002 data/BBD-2 data.txt'
 
 #---------------------------
 # Validate
-#---------------------------
-bbd2 <- as.data.frame(bbd2)
-train_bbd2 <- sample(bbd2[1:17,])
-test_bbd2 <- bbd2[sample(18:18),]
+train_bbd2 <- bbd2[1:17,,drop = FALSE]
+test_bbd2 <- bbd2[18,,drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for BBD2
@@ -98,7 +96,6 @@ bbd3 <- read.table('./Research2026-002 data/BBD-3 data.txt', header = TRUE)
 
 #---------------------------
 # Validate
-bbd3 <- as.data.frame(bbd3)
 train_bbd3 <- bbd3[1:17,, drop = FALSE]
 test_bbd3 <- bbd3[18,, drop = FALSE]
 
@@ -131,7 +128,6 @@ bbd4 <- read.table('./Research2026-002 data/BBD-4 data.txt', header = TRUE)
 
 #---------------------------
 # Validate
-bbd4 <- as.data.frame(bbd4)
 train_bbd4 <- bbd4[1:15,, drop = FALSE]
 test_bbd4 <- bbd4[16:17,, drop = FALSE]
 
@@ -235,7 +231,7 @@ bbd7 <- read.table('./Research2026-002 data/BBD-7 data.txt', header = TRUE)
 
 #-------------------------------
 # Validate
-  train_bbd7 <- bbd7[1:15,, drop = FALSE]
+train_bbd7 <- bbd7[1:15,, drop = FALSE]
 test_bbd7 <- bbd7[16,, drop = FALSE]
 
 #----------------------------------
@@ -270,11 +266,13 @@ results <- doe_meta_model(
 ####################################################################
 # BBD8 Optional Data issue with test (limits are outside train set) Also PBD3
 ####################################################################
-train_bbd8 <- read.table('./Research2026-002 data/BBD-8 data.txt', header = TRUE)
+bbd8 <- read.table('./Research2026-002 data/BBD-8 data.txt', header = TRUE)
 
 #-------------------------------
 # Validate
-test_bbd8 <- read.table('./Research2026-002 data/BBD-8 test.txt', header = TRUE)
+# test_bbd8 <- read.table('./Research2026-002 data/BBD-8 test.txt', header = TRUE)
+train_bbd8 <- bbd8[1:15,, drop = FALSE]
+test_bbd8 <- bbd8[16:22,, drop = FALSE]
 
 #----------------------------------
 # Ensemble modeling for BBD8
@@ -294,11 +292,11 @@ rsm_formulas <- list(
 #   A: 2→-1, 4→0, 6→+1  →  c(2, 6)
 #   C: 20→-1, 40→0, 60→+1 → c(20, 60)
 #   D: 2→-1, 4→0, 6→+1  →  c(2, 6)
-factor_ranges <- list(
-  A = c(2, 6),
-  C = c(20, 60),
-  D = c(2, 6)
-)
+# factor_ranges <- list(
+#   A = c(2, 6),
+#   C = c(20, 60),
+#   D = c(2, 6)
+# )
 
 results <- doe_meta_model(
   train_data = train_data,
@@ -369,8 +367,6 @@ bbd10 <- read.table('./Research2026-002 data/BBD-10 data.txt'
 # Define the column names
 colnames(bbd10) <- c("Run","x1","x2","x3",'y1','y2','y3','y4','y5')
 
-
-bbd10 <- as.data.frame(bbd10)
 train_bbd10 <- bbd10[1:15, , drop = FALSE]
 test_bbd10 <- bbd10[16, , drop = FALSE]
 
@@ -416,7 +412,6 @@ colnames(bbd11) <- c("Run","power","irradiation", "solvent","pH","Colchicine")
 
 #-------------------------------
 # Validate
-bbd11 <- as.data.frame(bbd11)
 train_bbd11 <- bbd11[1:21, , drop = FALSE]
 test_bbd11 <- bbd11[22:27, , drop = FALSE]
 
