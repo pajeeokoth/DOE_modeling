@@ -774,9 +774,11 @@ run_DOE_ANN_full <- function(data,
                              input_label_max     = 20,
                              edge_limit_per_pair = 2000,
                              graph_title         = NULL,
-                             max_runtime_secs    = 120,
+                             max_runtime_secs    = 240,
                              nfolds              = 5,
-                             max_models_per_arch = 10,
+                             max_models_per_arch = 20,
+                             cv_repeats          = 1,
+                             cv_seed_stride      = 10000,
                              standardize_response = TRUE) {
 
   if (!requireNamespace("h2o", quietly = TRUE)) stop("Install 'h2o' first.")
@@ -815,6 +817,25 @@ run_DOE_ANN_full <- function(data,
   if (safe_nfolds == 0L)
     message("[run_DOE_ANN_full] nfolds set to 0 (CV disabled): ",
             nrow(data), " rows < 2 * ", nfolds, " folds.")
+  ann_cv_label <- if (safe_nfolds > 1L) paste0(safe_nfolds, "-fold CV") else "No CV"
+  requested_cv_repeats <- suppressWarnings(as.integer(cv_repeats))
+  if (!is.finite(requested_cv_repeats) || requested_cv_repeats < 1L) requested_cv_repeats <- 1L
+  cv_repeats <- requested_cv_repeats
+  cv_seed_stride <- suppressWarnings(as.integer(cv_seed_stride))
+  if (!is.finite(cv_seed_stride) || cv_seed_stride < 1L) cv_seed_stride <- 10000L
+
+  # Tiny-dataset guard: avoid expensive repeated CV when folds are disabled
+  # or when sample size is very small.
+  if (safe_nfolds == 0L && cv_repeats > 1L) {
+    message("[run_DOE_ANN_full] cv_repeats reduced to 1 because CV is disabled.")
+    cv_repeats <- 1L
+  }
+  if (nrow(data) < 20L && cv_repeats > 2L) {
+    message("[run_DOE_ANN_full] cv_repeats capped at 2 for tiny dataset (n < 20).")
+    cv_repeats <- 2L
+  }
+
+  repeat_seeds <- seed + (seq_len(cv_repeats) - 1L) * cv_seed_stride
 
   # ---- Candidate hidden architectures ----
   # Sized for small DOE datasets (typically 13–36 rows, 2–10 factors).
@@ -913,75 +934,81 @@ run_DOE_ANN_full <- function(data,
       )
     )
 
-    for (search_space in search_spaces) {
-      grid_id_local <- paste0(
-        "DOE_grid_", search_space$suffix, "_", paste(hid, collapse = "-"), "_", sample(1e6, 1)
-      )
-
-      grid_local <- tryCatch({
-        h2o::h2o.grid(
-          algorithm       = "deeplearning",
-          grid_id         = grid_id_local,
-          x               = x,
-          y               = y,
-          training_frame  = hf,
-          nfolds          = safe_nfolds,
-          fold_assignment = if (safe_nfolds > 0L) "Modulo" else "AUTO",
-          hyper_params    = search_space$hyper_params,
-          search_criteria = base_search_criteria,
-          # Model-level early stopping: stop individual models when
-          # they plateau, preventing overfitting on small DOE data.
-          stopping_rounds    = 5,
-          stopping_metric    = "RMSE",
-          stopping_tolerance = 1e-4,
-          # Score frequently for reliable early stopping signal
-          score_each_iteration = FALSE,
-          score_interval       = 0,
-          overwrite_with_best_model = TRUE,
-          reproducible       = TRUE,
-          seed               = seed
+    for (rep_seed in repeat_seeds) {
+      for (search_space in search_spaces) {
+        grid_id_local <- paste0(
+          "DOE_grid_", search_space$suffix, "_", paste(hid, collapse = "-"),
+          "_r", rep_seed, "_", sample(1e6, 1)
         )
-      }, error = function(e) {
-        warning(sprintf("Grid (%s) for hidden=%s failed: %s",
-                        search_space$suffix,
-                        paste(hid, collapse = "-"),
-                        conditionMessage(e)))
-        NULL
-      })
-      if (is.null(grid_local)) next
 
-      grid_perf <- tryCatch(
-        suppressWarnings(h2o::h2o.getGrid(grid_id_local, sort_by = "rmse", decreasing = FALSE)),
-        error = function(e) NULL
-      )
-      if (is.null(grid_perf) || length(grid_perf@model_ids) == 0) next
+        search_criteria_local <- base_search_criteria
+        search_criteria_local$seed <- rep_seed
 
-      for (mid in grid_perf@model_ids) {
-        mdl <- tryCatch(h2o::h2o.getModel(mid), error = function(e) NULL)
-        if (is.null(mdl)) next
-        rmse_val <- tryCatch({
-          # Prefer CV metrics (generalisation error) over training metrics
-          # to avoid always selecting the largest topology that overfits.
-          cv_metrics <- mdl@model$cross_validation_metrics
-          tm         <- mdl@model$training_metrics
-          rmse_field <- NA_real_
-          if (!is.null(cv_metrics)) {
-            rmse_field <- cv_metrics@metrics$RMSE %||% NA
-          }
-          if (is.na(rmse_field) && !is.null(tm)) {
-            rmse_field <- tm@metrics$RMSE %||% tm$rmse %||% NA
-          }
-          if (!is.na(rmse_field)) as.numeric(rmse_field) else {
-            preds <- as.data.frame(h2o::h2o.predict(mdl, hf))
-            pred_col <- if ("predict" %in% names(preds)) preds$predict
-                        else preds[[which(vapply(preds, is.numeric, logical(1)))[1]]]
-            sqrt(mean((as.numeric(as.data.frame(hf[[y]])[[1]]) - pred_col)^2, na.rm = TRUE))
-          }
-        }, error = function(e) NA_real_)
-        successful_models[[mid]] <- mdl
-        model_perfs <- rbind(model_perfs,
-                             data.frame(model_id = mid, rmse = rmse_val,
-                                        stringsAsFactors = FALSE))
+        grid_local <- tryCatch({
+          h2o::h2o.grid(
+            algorithm       = "deeplearning",
+            grid_id         = grid_id_local,
+            x               = x,
+            y               = y,
+            training_frame  = hf,
+            nfolds          = safe_nfolds,
+            fold_assignment = if (safe_nfolds > 0L) "Random" else "AUTO",
+            hyper_params    = search_space$hyper_params,
+            search_criteria = search_criteria_local,
+            # Model-level early stopping: stop individual models when
+            # they plateau, preventing overfitting on small DOE data.
+            stopping_rounds    = 5,
+            stopping_metric    = "RMSE",
+            stopping_tolerance = 1e-4,
+            # Score frequently for reliable early stopping signal
+            score_each_iteration = FALSE,
+            score_interval       = 0,
+            overwrite_with_best_model = TRUE,
+            reproducible       = TRUE,
+            seed               = rep_seed
+          )
+        }, error = function(e) {
+          warning(sprintf("Grid (%s) for hidden=%s failed: %s",
+                          search_space$suffix,
+                          paste(hid, collapse = "-"),
+                          conditionMessage(e)))
+          NULL
+        })
+        if (is.null(grid_local)) next
+
+        grid_perf <- tryCatch(
+          suppressWarnings(h2o::h2o.getGrid(grid_id_local, sort_by = "rmse", decreasing = FALSE)),
+          error = function(e) NULL
+        )
+        if (is.null(grid_perf) || length(grid_perf@model_ids) == 0) next
+
+        for (mid in grid_perf@model_ids) {
+          mdl <- tryCatch(h2o::h2o.getModel(mid), error = function(e) NULL)
+          if (is.null(mdl)) next
+          rmse_val <- tryCatch({
+            # Prefer CV metrics (generalisation error) over training metrics
+            # to avoid always selecting the largest topology that overfits.
+            cv_metrics <- mdl@model$cross_validation_metrics
+            tm         <- mdl@model$training_metrics
+            rmse_field <- NA_real_
+            if (!is.null(cv_metrics)) {
+              rmse_field <- cv_metrics@metrics$RMSE %||% NA
+            }
+            if (is.na(rmse_field) && !is.null(tm)) {
+              rmse_field <- tm@metrics$RMSE %||% tm$rmse %||% NA
+            }
+            if (!is.na(rmse_field)) as.numeric(rmse_field) else {
+              preds <- as.data.frame(h2o::h2o.predict(mdl, hf))
+              pred_col <- if ("predict" %in% names(preds)) preds$predict
+                          else preds[[which(vapply(preds, is.numeric, logical(1)))[1]]]
+              sqrt(mean((as.numeric(as.data.frame(hf[[y]])[[1]]) - pred_col)^2, na.rm = TRUE))
+            }
+          }, error = function(e) NA_real_)
+          successful_models[[mid]] <- mdl
+          model_perfs <- rbind(model_perfs,
+                               data.frame(model_id = mid, rmse = rmse_val,
+                                          stringsAsFactors = FALSE))
+        }
       }
     }
   }
@@ -1089,7 +1116,12 @@ run_DOE_ANN_full <- function(data,
     all_model_perfs  = model_perfs,
     resp_mean        = resp_mean,
     resp_sd          = resp_sd,
-    standardize_response = standardize_response
+    standardize_response = standardize_response,
+    requested_nfolds     = nfolds,
+    effective_nfolds     = safe_nfolds,
+    cross_validation_type = ann_cv_label,
+    requested_cv_repeats  = requested_cv_repeats,
+    cv_repeats_used       = cv_repeats
   ))
 }
 
@@ -1209,9 +1241,11 @@ doe_meta_model <- function(train_data,
                            factor_ranges        = NULL,
                            excel_file           = "DOE_Metrics.xlsx",
                            ann_seed             = 123,
-                           ann_max_runtime_secs = 120,
+                           ann_max_runtime_secs = 240,
                            ann_nfolds           = 5,
-                           ann_max_models       = 10) {
+                           ann_max_models       = 20,
+                           ann_cv_repeats       = 1,
+                           ann_cv_seed_stride   = 10000) {
 
   # ---- Package checks ----
   for (pkg in c("rsm", "h2o", "hetGP", "openxlsx", "Metrics")) {
@@ -1514,7 +1548,9 @@ doe_meta_model <- function(train_data,
                        seed                = ann_seed,
                        max_runtime_secs    = ann_max_runtime_secs,
                        nfolds              = ann_nfolds,
-                       max_models_per_arch = ann_max_models),
+                       max_models_per_arch = ann_max_models,
+                       cv_repeats          = ann_cv_repeats,
+                       cv_seed_stride      = ann_cv_seed_stride),
       error = function(e) { warning("ANN failed: ", e$message); NULL }
     )
     ann_model <- if (!is.null(ann_result)) ann_result$model else NULL
@@ -1535,6 +1571,13 @@ doe_meta_model <- function(train_data,
     ann_mape       <- calc_mape(y_test, ann_pred)
     ann_rmse       <- Metrics::rmse(y_test, ann_pred)
     ann_topology   <- if (!is.null(ann_result)) ann_result$topology else "NA"
+    ann_cv_label <- if (!is.null(ann_result) && !is.null(ann_result$cross_validation_type)) {
+      as.character(ann_result$cross_validation_type[[1]])
+    } else if (ann_nfolds > 1) {
+      paste0(ann_nfolds, "-fold CV (requested)")
+    } else {
+      "No CV"
+    }
 
     # Free all H2O objects (models, grids, frames) now that ANN predictions
     # have been extracted into plain R vectors. Prevents JVM heap exhaustion
@@ -1631,7 +1674,7 @@ doe_meta_model <- function(train_data,
                "LOOCV", "NA",
                kernel_function = gp_kernel),
       make_row("ANN",      std_scaling_label, ann_mase, ann_mape, ann_rmse,
-               if (ann_nfolds > 1) paste0(ann_nfolds, "-fold CV") else "No CV",
+               ann_cv_label,
                ann_topology,
                epochs = ann_epochs, activation_function = ann_activation),
       make_row("Ensemble", paste(c(
@@ -1662,7 +1705,7 @@ doe_meta_model <- function(train_data,
         CROSS_VALIDATION_TYPE = c(
           "No CV (test holdout)",
           "LOOCV",
-          if (ann_nfolds > 1) paste0(ann_nfolds, "-fold CV") else "No CV",
+          ann_cv_label,
           "Weighted blend (no direct CV)"
         ),
         topology = c("NA", "NA", ann_topology, ann_topology),
