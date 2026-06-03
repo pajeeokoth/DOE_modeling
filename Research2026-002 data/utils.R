@@ -1104,6 +1104,8 @@ save_model_metrics <- function(file_path,
                                model_name,
                                mase,
                                mape,
+                               rmse = NA_real_,
+                               cross_validation_type = NA_character_,
                                topology,
                                hyperparams_flat) {
   
@@ -1118,6 +1120,8 @@ save_model_metrics <- function(file_path,
     Model      = model_name,
     MASE       = mase,
     MAPE       = mape,
+    RMSE       = rmse,
+    CROSS_VALIDATION_TYPE = cross_validation_type,
     Topology   = topology,
     Train_N    = nrow(X_train),
     Test_N     = nrow(X_test),
@@ -1184,7 +1188,8 @@ save_model_metrics <- function(file_path,
 #
 # Excel sheet "Model Metrics" columns:
 #   DESIGN_TYPE | SCALING_METHOD | RESPONSE | NUM_FACTORS |
-#   TRAIN_SIZE | TEST_SIZE | MODEL | MASE | MAPE | TOPOLOGY |
+#   TRAIN_SIZE | TEST_SIZE | MODEL | MASE | MAPE | RMSE |
+#   CROSS_VALIDATION_TYPE | TOPOLOGY |
 #   EPOCHS | KERNEL_FUNCTION | ACTIVATION_FUNCTION
 #
 # Scaling (automatic, per model — no user selection required):
@@ -1468,6 +1473,7 @@ doe_meta_model <- function(train_data,
     )
     rsm_mase <- calc_mase(y_test, rsm_pred, y_train)
     rsm_mape <- calc_mape(y_test, rsm_pred)
+    rsm_rmse <- Metrics::rmse(y_test, rsm_pred)
 
     # ------------------------------------------------------------------
     # 2. GP — gp_master_smallDOE()  (defined above in this file)
@@ -1495,6 +1501,7 @@ doe_meta_model <- function(train_data,
       gp_mase <- calc_mase(y_test, gp_pred, y_train)
       gp_mape <- calc_mape(y_test, gp_pred)
     }
+    gp_rmse <- Metrics::rmse(y_test, gp_pred)
 
     # ------------------------------------------------------------------
     # 3. ANN — run_DOE_ANN_full() — full hidden-layer grid search
@@ -1526,6 +1533,7 @@ doe_meta_model <- function(train_data,
     }
     ann_mase       <- calc_mase(y_test, ann_pred, y_train)
     ann_mape       <- calc_mape(y_test, ann_pred)
+    ann_rmse       <- Metrics::rmse(y_test, ann_pred)
     ann_topology   <- if (!is.null(ann_result)) ann_result$topology else "NA"
 
     # Free all H2O objects (models, grids, frames) now that ANN predictions
@@ -1575,6 +1583,7 @@ doe_meta_model <- function(train_data,
     ens_pred <- w[1] * rsm_pred + w[2] * gp_pred + w[3] * ann_pred
     ens_mase <- calc_mase(y_test, ens_pred, y_train)
     ens_mape <- calc_mape(y_test, ens_pred)
+    ens_rmse <- Metrics::rmse(y_test, ens_pred)
 
     # ------------------------------------------------------------------
     # Print summary for this response
@@ -1591,7 +1600,8 @@ doe_meta_model <- function(train_data,
     # ------------------------------------------------------------------
     # Build one Excel row per model
     # ------------------------------------------------------------------
-    make_row <- function(model_name, scaling_label, m_mase, m_mape,
+    make_row <- function(model_name, scaling_label, m_mase, m_mape, m_rmse,
+                         cross_validation_type,
                          topo = "NA", epochs = NA_integer_,
                          kernel_function = NA_character_, activation_function = NA_character_) {
       data.frame(
@@ -1604,6 +1614,8 @@ doe_meta_model <- function(train_data,
         MODEL            = model_name,
         MASE             = as.numeric(m_mase),
         MAPE             = as.numeric(m_mape),
+        RMSE             = as.numeric(m_rmse),
+        CROSS_VALIDATION_TYPE = cross_validation_type,
         TOPOLOGY         = topo,
         EPOCHS           = epochs,
         KERNEL_FUNCTION  = kernel_function,
@@ -1613,16 +1625,21 @@ doe_meta_model <- function(train_data,
     }
 
     all_rows <- c(all_rows, list(
-      make_row("RSM",      rsm_scaling_label, rsm_mase, rsm_mape, "NA"),
-      make_row("GP",       std_scaling_label, gp_mase,  gp_mape,  "NA",
+      make_row("RSM",      rsm_scaling_label, rsm_mase, rsm_mape, rsm_rmse,
+               "No CV (test holdout)", "NA"),
+      make_row("GP",       std_scaling_label, gp_mase,  gp_mape,  gp_rmse,
+               "LOOCV", "NA",
                kernel_function = gp_kernel),
-      make_row("ANN",      std_scaling_label, ann_mase, ann_mape, ann_topology,
+      make_row("ANN",      std_scaling_label, ann_mase, ann_mape, ann_rmse,
+               if (ann_nfolds > 1) paste0(ann_nfolds, "-fold CV") else "No CV",
+               ann_topology,
                epochs = ann_epochs, activation_function = ann_activation),
       make_row("Ensemble", paste(c(
                               paste0("RSM:", rsm_scaling_label),
                               paste0("GP/ANN:", std_scaling_label)
                             ), collapse = "; "),
-               ens_mase, ens_mape, ann_topology,
+               ens_mase, ens_mape, ens_rmse,
+               "Weighted blend (no direct CV)", ann_topology,
                epochs = ann_epochs, kernel_function = gp_kernel,
                activation_function = ann_activation)
     ))
@@ -1641,6 +1658,13 @@ doe_meta_model <- function(train_data,
         Model    = c("RSM", "GP", "ANN", "Ensemble"),
         MASE     = c(rsm_mase, gp_mase, ann_mase, ens_mase),
         MAPE     = c(rsm_mape, gp_mape, ann_mape, ens_mape),
+        RMSE     = c(rsm_rmse, gp_rmse, ann_rmse, ens_rmse),
+        CROSS_VALIDATION_TYPE = c(
+          "No CV (test holdout)",
+          "LOOCV",
+          if (ann_nfolds > 1) paste0(ann_nfolds, "-fold CV") else "No CV",
+          "Weighted blend (no direct CV)"
+        ),
         topology = c("NA", "NA", ann_topology, ann_topology),
         stringsAsFactors = FALSE
       )
@@ -1662,6 +1686,21 @@ doe_meta_model <- function(train_data,
     for (col in setdiff(all_cols, names(new_df))) new_df[[col]] <- NA
     rbind(old_df[, all_cols, drop = FALSE], new_df[, all_cols, drop = FALSE])
   }
+
+  reorder_model_metrics_columns <- function(df) {
+    if (is.null(df) || nrow(df) == 0) return(df)
+    preferred_cols <- c(
+      "DESIGN_TYPE", "SCALING_METHOD", "RESPONSE", "NUM_FACTORS",
+      "TRAIN_SIZE", "TEST_SIZE", "MODEL", "MASE", "MAPE", "RMSE",
+      "CROSS_VALIDATION_TYPE", "TOPOLOGY", "EPOCHS",
+      "KERNEL_FUNCTION", "ACTIVATION_FUNCTION"
+    )
+    ordered_existing <- preferred_cols[preferred_cols %in% names(df)]
+    remaining <- setdiff(names(df), preferred_cols)
+    df[, c(ordered_existing, remaining), drop = FALSE]
+  }
+
+  out_df <- reorder_model_metrics_columns(out_df)
 
   sort_gp_kernel_search <- function(df) {
     if (is.null(df) || nrow(df) == 0) return(df)
@@ -1704,6 +1743,7 @@ doe_meta_model <- function(train_data,
     existing  <- tryCatch(openxlsx::read.xlsx(excel_file, sheet = sheet),
                           error = function(e) NULL)
     combined  <- safe_rbind(existing, out_df)
+    combined  <- reorder_model_metrics_columns(combined)
     # Rewrite the entire sheet with combined data (handles column changes safely)
     openxlsx::removeWorksheet(wb, sheet)
     openxlsx::addWorksheet(wb, sheet)
@@ -1778,7 +1818,8 @@ doe_meta_model <- function(train_data,
 #
 # Output sheet "Model Metrics" now includes:
 #   DESIGN_TYPE, SCALING_METHOD, RESPONSE, NUM_FACTORS,
-#   TRAIN_SIZE, TEST_SIZE, MODEL, MASE, MAPE, TOPOLOGY,
+#   TRAIN_SIZE, TEST_SIZE, MODEL, MASE, MAPE, RMSE,
+#   CROSS_VALIDATION_TYPE, TOPOLOGY,
 #   EPOCHS, KERNEL_FUNCTION
 #
 # Notes:

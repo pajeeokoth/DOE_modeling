@@ -399,6 +399,20 @@ results <- doe_meta_model(
 ####################################################################
 # BBD11 Optional no test set provided
 ####################################################################
+# In execution this produces the following warnings because the 
+# test set is only 1 row, so the actual and predicted vectors have 
+# different lengths. The code still runs and produces results, 
+# but the warnings indicate that the metrics may not be meaningful 
+# due to the mismatch in lengths.
+#---------------------------------
+# Warning messages:
+# 1: In actual - preds :
+#   longer object length is not a multiple of shorter object length
+# 2: In (actual - preds)/denom :
+#   longer object length is not a multiple of shorter object length
+# 3: In actual - preds :
+#   longer object length is not a multiple of shorter object length
+####################################################################
 bbd11 <- read.table('./Research2026-002 data/BBD-11 data.txt'
                    , header = FALSE
                    , skip = 1
