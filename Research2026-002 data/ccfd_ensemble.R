@@ -420,6 +420,10 @@ results <- doe_meta_model(
 ####################################################################
 # 4FD1 (Four-Level Factorial Design) 4levela-consider
 ####################################################################
+#Warning message:
+#  In scan(file = file, what = what, sep = sep, quote = quote, dec = dec,  :
+#            number of items read is not a multiple of the number of columns
+####################################################################
 fl_fd1 <- read.table('./Research2026-002 data/4FD-1 data.txt', header = TRUE)
 # Assign new column names for the factors
 names(fl_fd1)[names(fl_fd1) == "CuttingSpeed"] <- "A"

@@ -687,6 +687,14 @@ results <- doe_meta_model(
 ####################################################################
 # CCD16
 ####################################################################
+# Execution of this model returns the following warning. 
+#------------------------------
+# Warning message:
+# In doe_meta_model(train_data = train_data, test_data = test_data,  :
+  # doe_meta_model(): train predictors are already standardized but test 
+  # predictors are not. Standardizing test using its own mean/sd. 
+  # For best results, supply both datasets on the same scale.
+####################################################################
 ccd16 <- read.csv('./Research2026-002 data/CCD-16 data.txt'
                   , header = FALSE
                   , skip = 1
@@ -851,6 +859,18 @@ results <- doe_meta_model(
 ####################################################################
 # CCD20
 ####################################################################
+# Execution returns warning messages about rank-deficient fit and 
+# dropping rows with NA in predictors/response. This may be due 
+# to the small sample size (only 20 training points) and/or 
+# multicollinearity among predictors. Consider simplifying 
+# the model or collecting more data for better estimation.
+# ---------------------------
+# Warning messages:
+# 1: In predict.lm(rsm_fit, newdata = test_rsm) :
+#   prediction from rank-deficient fit; attr(*, "non-estim") has doubtful cases
+# 2: In gp_master_smallDOE(data = train_std, response = resp, factors = predictors,  :
+#   gp_master_smallDOE(): dropping 15 rows with NA in predictors/response.
+#######################################################################
 ccd20 <- read.table('./Research2026-002 data/CCD-20 data.txt', header = TRUE)
 
 #------------------

@@ -96,6 +96,22 @@ results <- doe_meta_model(
 ####################################################################
 # DSD3 No paper hence no model
 ####################################################################
+# Execution returns warning messages about aliased coefficients and 
+# rank-deficient fit, which may indicate issues with the model specification 
+# or data. The 'rsm' function is returning an 'lm' object instead of a 
+# proper response surface model due to these issues. The predictions 
+# from the 'lm' object may not be reliable, and the warning about 
+# non-estimable cases suggests that some coefficients could not be 
+# estimated due to multicollinearity or insufficient data.
+# ---------------------
+# Warning messages:
+# 1: In rsm::rsm(rsm_form, data = train_rsm) :
+#   Some coefficients are aliased - cannot use 'rsm' methods.
+#   Returning an 'lm' object.
+# 2: In predict.lm(rsm_fit, newdata = test_rsm) :
+#   prediction from rank-deficient fit; attr(*, "non-estim") has doubtful cases
+#####################################################################
+
 dsd3 <- read.table('./Research2026-002 data/DSD-3 data.txt', header = TRUE)
 
 #---------------------------------

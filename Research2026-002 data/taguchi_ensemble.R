@@ -52,6 +52,21 @@ results <- doe_meta_model(
 ####################################################################
 # TAG2
 ####################################################################
+# Execution returns warning messages about aliased coefficients and 
+# rank-deficient fit. This is likely due to the small sample size 
+# (25 training points) and the complexity of the RSM model being 
+# fitted, which includes many terms (linear, quadratic, and interactions). 
+# With limited data, some coefficients may not be estimable, leading to 
+# aliasing and rank deficiency in the model.
+# ---------------------
+# Warning messages:
+# 1: In rsm::rsm(rsm_form, data = train_rsm) :
+#   Some coefficients are aliased - cannot use 'rsm' methods.
+#   Returning an 'lm' object.
+# 2: In predict.lm(rsm_fit, newdata = test_rsm) :
+#    prediction from rank-deficient fit; attr(*, "non-estim") has doubtful cases
+####################################################################
+
 tag2 <- read.table('./Research2026-002 data/TAG-2 data.txt', header = TRUE)
 
 #---------------------------
@@ -87,6 +102,9 @@ results <- doe_meta_model(
 
 ####################################################################
 # TAG2A
+####################################################################
+# Execution returns
+# [run_DOE_ANN_full] nfolds set to 0 (CV disabled): 9 rows < 2 * 5 folds.
 ####################################################################
 tag2A <- read.csv('./Research2026-002 data/TAG-2a data.csv', header = TRUE)
 
@@ -192,6 +210,16 @@ results <- doe_meta_model(
 ####################################################################
 # TAG5 Also CCD18 train coded, test set not coded
 ####################################################################
+# Execution returns
+# [run_DOE_ANN_full] nfolds set to 0 (CV disabled): 9 rows < 2 * 5 folds.
+# and
+# Warning messages:
+# 1: In rsm::rsm(rsm_form, data = train_rsm) :
+#   Some coefficients are aliased - cannot use 'rsm' methods.
+#   Returning an 'lm' object.
+# 2: In predict.lm(rsm_fit, newdata = test_rsm) :
+#   prediction from rank-deficient fit; attr(*, "non-estim") has doubtful cases
+####################################################################
 train_tag5 <- read.table('./Research2026-002 data/TAG-5 data.txt', header = TRUE)
 
 #--------------------------
@@ -278,6 +306,9 @@ results <- doe_meta_model(
 ####################################################################
 # TAG7 Also FFD2 #MRR has no validation data
 ####################################################################
+# Execution returns
+# [run_DOE_ANN_full] nfolds set to 0 (CV disabled): 9 rows < 2 * 5 folds.
+####################################################################
 train_tag7 <- read.table('./Research2026-002 data/TAG-7 data.txt', header = TRUE)
 
 test_tag7 <- read.table('./Research2026-002 data/TAG-7 FFD2 test.txt', header = TRUE)
@@ -306,6 +337,20 @@ results <- doe_meta_model(
 
 ####################################################################
 # TAG8
+####################################################################
+# Execution returns warning messages about aliased coefficients and 
+# rank-deficient fit. This is likely due to the small sample size 
+# (25 training points) and the complexity of the RSM model being 
+# fitted, which includes many terms (linear, quadratic, and interactions). 
+# With limited data, some coefficients may not be estimable, leading to 
+# aliasing and rank deficiency in the model.
+# ---------------------
+# Warning messages:
+# 1: In rsm::rsm(rsm_form, data = train_rsm) :
+#   Some coefficients are aliased - cannot use 'rsm' methods.
+#   Returning an 'lm' object.
+# 2: In predict.lm(rsm_fit, newdata = test_rsm) :
+#    prediction from rank-deficient fit; attr(*, "non-estim") has doubtful cases
 ####################################################################
 tag8 <- read.table('./Research2026-002 data/TAG-8 data.txt', header = TRUE)
 
@@ -377,6 +422,27 @@ results <- doe_meta_model(
 
 ####################################################################
 # TAG10
+####################################################################
+# Execution returns
+# [run_DOE_ANN_full] nfolds set to 0 (CV disabled): 9 rows < 2 * 5 folds.
+# Execution also returns warning messages about aliased coefficients and 
+# rank-deficient fit. This is likely due to the small sample size 
+# (9 training points) and the complexity of the RSM model being fitted, 
+# which includes many terms (linear, quadratic, and interactions). With 
+# limited data, some coefficients may not be estimable, leading to 
+# aliasing and rank deficiency in the model.
+# ---------------------
+# Warning messages:
+# 1: In rsm::rsm(rsm_form, data = train_rsm) :
+#   Some coefficients are aliased - cannot use 'rsm' methods.
+#   Returning an 'lm' object.
+# 2: In predict.lm(rsm_fit, newdata = test_rsm) :
+#   prediction from rank-deficient fit; attr(*, "non-estim") has doubtful cases
+# 3: In rsm::rsm(rsm_form, data = train_rsm) :
+#   Some coefficients are aliased - cannot use 'rsm' methods.
+#   Returning an 'lm' object.
+# 4: In predict.lm(rsm_fit, newdata = test_rsm) :
+#   prediction from rank-deficient fit; attr(*, "non-estim") has doubtful cases
 ####################################################################
 tag10 <- read.table('./Research2026-002 data/TAG-10 data.txt', header = TRUE)
 
@@ -475,6 +541,17 @@ results <- doe_meta_model(
 ####################################################################
 # TAG13
 ####################################################################
+# Execution also returns warning messages about aliased coefficients and 
+# rank-deficient fit. This is likely due to the small sample size 
+# (9 training points) and the complexity of the RSM model being fitted, 
+# which includes many terms (linear, quadratic, and interactions). With 
+# limited data, some coefficients may not be estimable, leading to 
+# aliasing and rank deficiency in the model.
+# ------------------------------
+# Warning message:
+# In predict.lm(rsm_fit, newdata = test_rsm) :
+#   prediction from rank-deficient fit; attr(*, "non-estim") has doubtful cases
+####################################################################
 tag13 <- read.table('./Research2026-002 data/TAG-13 data.txt', header = TRUE)
 
 #--------------------------
@@ -547,6 +624,13 @@ results <- doe_meta_model(
 ####################################################################
 # TAG15 Also BBD19
 ####################################################################
+# Warning messages:
+# 1: In rsm::rsm(rsm_form, data = train_rsm) :
+#   Some coefficients are aliased - cannot use 'rsm' methods.
+#   Returning an 'lm' object.
+# 2: In predict.lm(rsm_fit, newdata = test_rsm) :
+#   prediction from rank-deficient fit; attr(*, "non-estim") has doubtful cases
+#####################################################################
 train_tag15 <- read.table('./Research2026-002 data/TAG-15 data.txt', header = TRUE)
 
 #---------------------------------
